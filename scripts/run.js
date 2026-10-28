@@ -119,7 +119,7 @@ ${btn}${foot(c, ids, top)}`);
     const ids = (Array.isArray(sp) ? sp : []).map(x => byName[norm(x)]).filter(Boolean);
     const top = TOPID[String(at.TOP_SPOT_SWELL_RADAR || '')] || '';
     const wk = 'welcome|' + c.email;
-    if (!welcomed[wk]) {
+    if (!welcomed[wk] && ids.length) {
       try { await sendWelcome(c, at.NOMBRE || at.FIRSTNAME || '', ids, top, false); welcomed[wk] = now; console.log('Bienvenida a ' + c.email); } catch (e) { console.log(`Fallo bienvenida ${c.email}: ${e.message}`); }
     }
     if (WELCOME_ONLY || !ids.length) continue; // sin spots = alertas pausadas
