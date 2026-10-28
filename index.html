@@ -528,6 +528,9 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 .camic{display:inline-flex;align-items:center;flex:none;margin-left:6px;font-size:13px;line-height:1;cursor:pointer;border-radius:999px;padding:2px 5px;background:color-mix(in srgb,var(--aqua) 18%,transparent);text-decoration:none;font-family:var(--body);font-weight:700;color:var(--fg)}
 .camic.big{font-size:13px;padding:4px 10px;vertical-align:middle}
 .camic:hover{background:color-mix(in srgb,var(--aqua) 35%,transparent)}
+.set-sec{display:flex;flex-direction:column;gap:6px;align-items:flex-start}.set-sec h3{margin:4px 0 0;font-family:var(--display);font-size:16px;font-weight:800}.set-sec small{color:var(--fg3);font-size:12.5px}
+.set-mail{border:1.5px solid var(--coral);background:color-mix(in srgb,var(--coral) 8%,var(--card));border-radius:var(--r-md);padding:14px}
+.set-sum{font-size:14px;color:var(--fg);line-height:1.45}.set-sum b{font-weight:700}
 .cfg-box{margin-top:6px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;border:1.5px solid var(--line);background:var(--card);border-radius:var(--r-md);padding:14px}.cfg-box b{font-family:var(--display);font-size:15px}.cfg-box small{color:var(--fg2);font-size:13px}
 .reg-skip{border:0;background:none;color:var(--fg3);font-size:13px;text-decoration:underline;padding:6px}
 
@@ -565,9 +568,9 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
     <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="10" fill="var(--coral)"/><path d="M5 21c3.5 0 4.5-6 9-6 3.6 0 3.9 4 6.6 4 2 0 2.4-2 2.4-3.4 0-3.3-3-5.6-6.4-5.6 6.6-3 13.4 1.9 13.4 8.8 0 1.2-.2 2.2-.5 3.2H5z" fill="var(--coral-ink)"/></svg>
     <div><h1>Swell Radar Weekend Warriors</h1><small>9 spots · Maresme y Empordà · 7 días</small><div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">Cargando…</span></div></div>
   </div>
-  <button class="srcbtn" id="mineBtn" type="button" aria-label="Mis spots" aria-haspopup="dialog" aria-controls="minePanel">
+  <button class="srcbtn" id="mineBtn" type="button" aria-label="Ajustes" aria-haspopup="dialog" aria-controls="minePanel">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3"/></svg>
-    <span>Mis spots <span class="num" id="mineCount"></span></span>
+    <span>Ajustes <span class="num" id="mineCount"></span></span>
   </button>
   <button class="srcbtn" id="srcBtn" type="button" aria-label="Fuentes" title="Fuentes" aria-haspopup="dialog" aria-controls="srcPanel">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v6.5c0 1.6 3.4 2.8 7.5 2.8s7.5-1.2 7.5-2.8V5.5"/><path d="M4.5 12v6.5c0 1.6 3.4 2.8 7.5 2.8s7.5-1.2 7.5-2.8V12"/></svg>
@@ -583,7 +586,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
       <label class="reg-f"><span>Email</span><input id="regEmail" type="email" required placeholder="tu@email.com" autocomplete="email" inputmode="email"></label>
       <fieldset class="reg-spots"><legend>¿De qué spots quieres alertas?</legend><div id="regSpots"></div></fieldset>
       <label class="reg-f"><span>Tu top spot</span><select id="regTop"></select></label>
-      <label class="reg-ok"><input id="regOk" type="checkbox" required><span>Acepto recibir por email las alertas de Swell Radar (ARDG Consulting). Puedo cambiarlo o darme de baja cuando quiera desde Mis spots → Configuración o desde el enlace de cada email.</span></label>
+      <label class="reg-ok"><input id="regOk" type="checkbox" required><span>Acepto recibir por email las alertas de Swell Radar (ARDG Consulting). Puedo cambiarlo o darme de baja cuando quiera desde Ajustes o desde el enlace de cada email.</span></label>
       <div class="reg-msg" id="regMsg" role="alert"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="srcbtn reg-go" id="whoSave" type="submit">Entrar</button><button class="reg-skip" id="regSkip" type="button" hidden>Ahora no</button><button class="reg-skip" id="regStop" type="button" hidden>Dejar de recibir alertas</button></div>
     </form>
@@ -601,15 +604,16 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 <div class="overlay" id="minePanel" role="dialog" aria-modal="true" aria-labelledby="mineTitle" hidden>
   <div class="panel" style="max-width:520px">
     <div class="panel-h">
-      <div><h2 id="mineTitle">Mis spots</h2><p>Elige qué spots quieres ver. Se guarda solo en este dispositivo; no cambia lo que ven los demás.</p></div>
-      <button class="xbtn" id="mineClose" type="button" aria-label="Cerrar mis spots"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div><h2 id="mineTitle">Ajustes</h2><p>Son dos cosas distintas: las <b>alertas que te llegan por email</b> y <b>lo que ves en la app</b>.</p></div>
+      <button class="xbtn" id="mineClose" type="button" aria-label="Cerrar ajustes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
+    <section class="set-sec set-mail"><h3>📧 Alertas por email</h3><div id="alertSum" class="set-sum"></div><button class="srcbtn reg-go" id="cfgBtn" type="button">Cambiar alertas, nombre o email</button><small>Aquí también puedes darte de baja.</small></section>
+    <section class="set-sec"><h3>📱 Lo que ves en la app</h3><small>Solo en este móvil. No cambia tus alertas por email.</small></section>
     <label class="mine-row" style="margin-bottom:6px"><input type="checkbox" id="mineBuoys"><span><b>Ver información de las boyas</b><small>Ola medida en directo por Puertos del Estado</small></span></label>
     <label class="mine-row" style="margin-bottom:6px"><input type="checkbox" id="mineIso"><span><b>Ver mapa de isobaras</b><small>Borrascas, anticiclones y viento, 7 días</small></span></label>
     <label class="mine-row" style="margin-bottom:10px"><input type="checkbox" id="mineWx"><span><b>Ver mapa del tiempo</b><small>Nubes y lluvia, 7 días</small></span></label>
     <div class="mine-list" id="mineList"></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="srcbtn" id="mineAll" type="button">Mostrar todos</button><span id="mineMsg" style="color:var(--coral);font-size:13px;font-weight:600"></span></div>
-    <div class="cfg-box"><b>⚙️ Configuración</b><small>Tu nombre, tu email y las alertas por email: qué spots, tu top spot o darte de baja.</small><button class="srcbtn reg-go" id="cfgBtn" type="button">Abrir configuración</button></div>
   </div>
 </div>
 
@@ -1507,7 +1511,7 @@ async function stopAlerts(){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ $("regMsg").textContent="Revisa el email."; return; }
   try{ await brevoSend(email,name,[],""); }catch(e){}
   try{ const r=JSON.parse(localStorage.getItem(REG_KEY)||"{}"); localStorage.setItem(REG_KEY, JSON.stringify(Object.assign(r,{email,ok:false,spots:[],at:Date.now()}))); }catch(e){}
-  $("regMsg").textContent="Hecho: ya no recibirás alertas. Puedes volver a activarlas cuando quieras desde «Mis datos de registro».";
+  $("regMsg").textContent="Hecho: ya no recibirás alertas. Puedes volver a activarlas cuando quieras desde Ajustes → Alertas por email.";
   $("regStop").hidden=true;
 }
 async function register(e){
@@ -1675,7 +1679,13 @@ function closeSources(){ $("srcPanel").hidden=true; if(srcLastFocus) srcLastFocu
 $("srcBtn").addEventListener("click", openSources);
 let mineLastFocus=null;
 function closeMine(){ $("minePanel").hidden=true; if(mineLastFocus) mineLastFocus.focus(); }
-$("mineBtn").addEventListener("click", ()=>{ renderMine(); mineLastFocus=document.activeElement; $("minePanel").hidden=false; $("mineClose").focus(); });
+function renderAlertSum(){ let r={}; try{ r=JSON.parse(localStorage.getItem(REG_KEY)||"{}"); }catch(e){}
+  const nm=id=>(SPOTS.find(x=>x.id===id)||{}).name||id;
+  $("alertSum").innerHTML = !r.email ? "Todavía no te has registrado: no recibes alertas por email."
+    : (!r.ok || !(r.spots||[]).length) ? `Alertas <b>pausadas</b> para ${esc(r.email)}.`
+    : `Te avisamos en <b>${esc(r.email)}</b> cuando haya 🔥 en: ${(r.spots||[]).map(id=>esc(nm(id))).join(", ")}.${r.top?`<br>Top spot: <b>${esc(nm(r.top))}</b>`:""}`;
+  $("cfgBtn").textContent = r.email ? "Cambiar alertas, nombre o email" : "Registrarme para recibir alertas"; }
+$("mineBtn").addEventListener("click", ()=>{ renderAlertSum(); renderMine(); mineLastFocus=document.activeElement; $("minePanel").hidden=false; $("mineClose").focus(); });
 $("mineClose").addEventListener("click", closeMine);
 $("minePanel").addEventListener("click", e=>{ if(e.target.id==="minePanel") closeMine(); });
 $("mineAll").addEventListener("click", ()=>{ hidden.clear(); saveHidden(); renderMine(); renderAllButStatus(); $("mineMsg").textContent=""; });
