@@ -24,7 +24,7 @@ async function get(url, tries = 3) {
 
 (async () => {
   const now = madrid(), hr = +now.slice(11, 13);
-  const WELCOME_ONLY = !!process.env.WELCOME_ONLY;
+  const WELCOME_ONLY = !!process.env.WELCOME_ONLY, DIGEST = hr === 6 || !!process.env.FORCE_DIGEST;
   if (!WELCOME_ONLY && !process.env.SKIP_HOUR_CHECK && !TEST_EMAIL && ![6, 13, 19].includes(hr)) { console.log(`Hora de Madrid ${now}: no toca (6, 13 o 19 h). Salgo.`); return; }
   fs.mkdirSync(TMP, { recursive: true });
   if (!process.env.SKIP_FETCH && !WELCOME_ONLY) {
@@ -76,7 +76,8 @@ async function get(url, tries = 3) {
   const foot = (c, ids, top) => `<p style="color:#6a8b93;font-size:12px;margin-top:18px">Recibes este email porque te registraste en Swell Radar.<br><a href="${editUrl(c, ids, top)}" style="color:#3d6470">Cambiar mis spots y alertas</a> · <a href="{{ unsubscribe }}" style="color:#3d6470">Darme de baja</a></p>`;
   const wrap = inner => `<div style="font-family:Arial,sans-serif;font-size:15px;color:#0a2430;max-width:560px">${head}${inner}</div>`;
   const mail = (c, name, days, ids, top) => wrap(`<p>Hola, ${esc(name || 'surfer')}:</p>
-${days.map(x => `<p style="margin:14px 0 4px"><b>${'🔥'.repeat(x.fuegos)} ${dayName(x.dia)}</b></p>
+<p style="margin:0 0 6px;color:#3d6470">Tu resumen de hoy: días con 🔥 en tus spots en los próximos 7 días (de 8 a 20 h).</p>
+${days.map(x => `<p style="margin:14px 0 4px"><b>${'🔥'.repeat(x.fuegos)} ${dayName(x.dia)}</b>${x.nuevo ? ' <span style="font-size:11px;font-weight:700;color:#fff;background:#ee4f2c;border-radius:999px;padding:1px 7px;vertical-align:middle">NUEVO</span>' : ''}</p>
 <p style="margin:0">Mejor: <b>${esc(x.mejor.spot)}</b> a las ${x.mejor.hora} · ${fmt(x.mejor.h)} m · ${fmt(x.mejor.p)} s · ${fmt(x.mejor.e)} kJ</p>
 ${x.spots.length > 1 ? `<p style="margin:2px 0 0;color:#3d6470">También con fuego: ${x.spots.filter(s => s !== x.mejor.spot).map(esc).join(', ')}</p>` : ''}`).join('')}
 <p style="margin-top:18px;color:#3d6470;font-size:13px">Última actualización de la previsión: ${upd2}</p>${btn}${foot(c, ids, top)}`);
@@ -85,7 +86,7 @@ ${x.spots.length > 1 ? `<p style="margin:2px 0 0;color:#3d6470">También con fue
 <p style="margin:12px 0 4px"><b>Tus spots:</b> ${ids.map(id => esc((SPOTS.find(s => s.id === id) || {}).name || id)).join(', ') || '—'}</p>
 ${top ? `<p style="margin:0"><b>Tu top spot:</b> ${esc((SPOTS.find(s => s.id === top) || {}).name || top)}</p>` : ''}
 <p style="margin:14px 0 4px"><b>Cuándo te avisamos</b></p>
-<p style="margin:0">Revisamos la previsión a las 7:00, 14:00 y 20:00 y te escribimos solo si hay olas de 8 a 20 h en los próximos 7 días:<br>🔥 ola de 0,6 m o más y periodo de 6 s o más · 🔥🔥 1 m o más · 🔥🔥🔥 1,5 m o más. No repetimos un aviso que ya te hemos enviado.</p>
+<p style="margin:0">Te enviamos <b>un solo email al día, a las 7:00</b>, y solo si hay olas de 8 a 20 h en los próximos 7 días:<br>🔥 ola de 0,6 m o más y periodo de 6 s o más · 🔥🔥 1 m o más · 🔥🔥🔥 1,5 m o más. Los días que aparecen por primera vez van marcados como NUEVO.</p>
 <p style="margin:14px 0 4px"><b>Ponla en tu móvil como una app</b></p>
 <p style="margin:0">iPhone (Safari o Chrome): abre la app, pulsa <b>Compartir</b> (cuadrado con flecha) y elige <b>Añadir a pantalla de inicio</b>.<br>Android (Chrome): menú <b>⋮</b> y <b>Instalar aplicación</b>.<br>En la app también tienes el botón <b>📲 Instalar en el móvil</b>.</p>
 ${btn}${foot(c, ids, top)}`);
@@ -95,7 +96,7 @@ ${btn}${foot(c, ids, top)}`);
   }
   async function send(c, name, days, test, ids, top) {
     const max = Math.max(...days.map(x => x.fuegos));
-    await brevo('POST', '/smtp/email', { sender: SENDER, to: [{ email: c.email, name: name || undefined }], subject: (test ? '[Prueba] ' : '') + '🔥'.repeat(max) + ' Swell Radar', htmlContent: mail(c, name, days, ids, top) });
+    await brevo('POST', '/smtp/email', { sender: SENDER, to: [{ email: c.email, name: name || undefined }], subject: (test ? '[Prueba] ' : '') + '🔥'.repeat(max) + ' Swell Radar · resumen del día', htmlContent: mail(c, name, days, ids, top) });
   }
   async function sendWelcome(c, name, ids, top, test) {
     await brevo('POST', '/smtp/email', { sender: SENDER, to: [{ email: c.email, name: name || undefined }], subject: (test ? '[Prueba] ' : '') + '🌊 Bienvenido a Swell Radar', htmlContent: welcome(c, name, ids, top) });
@@ -122,10 +123,11 @@ ${btn}${foot(c, ids, top)}`);
     if (!welcomed[wk] && ids.length) {
       try { await sendWelcome(c, at.NOMBRE || at.FIRSTNAME || '', ids, top, false); welcomed[wk] = now; console.log('Bienvenida a ' + c.email); } catch (e) { console.log(`Fallo bienvenida ${c.email}: ${e.message}`); }
     }
-    if (WELCOME_ONLY || !ids.length) continue; // sin spots = alertas pausadas
-    const nuevos = fires(ids).filter(x => (state[`${x.dia}|${c.email}`] || 0) < x.fuegos);
+    if (WELCOME_ONLY || !DIGEST || !ids.length) continue; // alertas: un solo email al día, a las 7:00 · sin spots = pausadas
+    if (welcomed['digest|' + c.email] === today) continue; // ya enviado hoy
+    const nuevos = fires(ids).map(x => Object.assign(x, { nuevo: (state[`${x.dia}|${c.email}`] || 0) < x.fuegos }));
     if (!nuevos.length) continue;
-    try { await send(c, at.NOMBRE || at.FIRSTNAME || '', nuevos, false, ids, top); nuevos.forEach(x => state[`${x.dia}|${c.email}`] = x.fuegos); sent++; console.log(`Aviso a ${c.email}: ${nuevos.map(x => x.dia + ' ' + '🔥'.repeat(x.fuegos)).join(', ')}`); }
+    try { await send(c, at.NOMBRE || at.FIRSTNAME || '', nuevos, false, ids, top); nuevos.forEach(x => state[`${x.dia}|${c.email}`] = Math.max(state[`${x.dia}|${c.email}`] || 0, x.fuegos)); welcomed['digest|' + c.email] = today; sent++; console.log(`Aviso a ${c.email}: ${nuevos.map(x => x.dia + ' ' + '🔥'.repeat(x.fuegos)).join(', ')}`); }
     catch (e) { console.log(`Fallo con ${c.email}: ${e.message}`); }
   }
   fs.mkdirSync(path.dirname(STATE), { recursive: true }); state.welcomed = welcomed; fs.writeFileSync(STATE, JSON.stringify(state, null, 1));

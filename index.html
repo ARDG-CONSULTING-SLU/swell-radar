@@ -596,7 +596,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 
 <div class="overlay" id="whoPanel" role="dialog" aria-modal="true" aria-labelledby="whoTitle" hidden>
   <div class="panel" style="max-width:560px">
-    <div class="panel-h"><div><div class="eyebrow">Swell Radar</div><h2 id="whoTitle">Regístrate</h2><p id="whoSub">Solo la primera vez en este móvil. Con tu email te avisamos cuando haya 🔥 en tus spots.</p></div></div>
+    <div class="panel-h"><div><div class="eyebrow">Swell Radar</div><h2 id="whoTitle">Regístrate</h2><p id="whoSub">Solo la primera vez en este móvil. Con tu email te enviamos un resumen a las 7:00 los días que haya 🔥 en tus spots.</p></div></div>
     <form id="regForm" class="reg" novalidate>
       <label class="reg-f"><span>Nombre</span><input id="whoInput" type="text" maxlength="24" required placeholder="Tu nombre" autocomplete="given-name"></label>
       <label class="reg-f"><span>Email</span><input id="regEmail" type="email" required placeholder="tu@email.com" autocomplete="email" inputmode="email"></label>
@@ -1512,7 +1512,7 @@ function openWho(ov){
   if(ov) reg=Object.assign({}, reg, ov);
   const isReg=!!(reg.email && reg.ok);
   $("whoTitle").textContent = isReg ? "Mis alertas" : "Regístrate";
-  $("whoSub").textContent = isReg ? "Cambia tus spots o tu top spot y guarda. Los cambios valen para las próximas alertas." : "Solo la primera vez en este móvil. Con tu email te avisamos cuando haya 🔥 en tus spots.";
+  $("whoSub").textContent = isReg ? "Cambia tus spots o tu top spot y guarda. Los cambios valen para las próximas alertas." : "Solo la primera vez en este móvil. Con tu email te enviamos un resumen a las 7:00 los días que haya 🔥 en tus spots.";
   $("whoSave").textContent = isReg ? "Guardar cambios" : "Entrar";
   $("regStop").hidden = !isReg;
   $("whoInput").value = reg.name || who || "";
@@ -1710,7 +1710,7 @@ function renderAlertSum(){ let r={}; try{ r=JSON.parse(localStorage.getItem(REG_
   const nm=id=>(SPOTS.find(x=>x.id===id)||{}).name||id;
   $("alertSum").innerHTML = !r.email ? "Todavía no te has registrado: no recibes alertas por email."
     : (!r.ok || !(r.spots||[]).length) ? `Alertas <b>pausadas</b> para ${esc(r.email)}.`
-    : `Te avisamos en <b>${esc(r.email)}</b> cuando haya 🔥 en: ${(r.spots||[]).map(id=>esc(nm(id))).join(", ")}.${r.top?`<br>Top spot: <b>${esc(nm(r.top))}</b>`:""}`;
+    : `Un email al día, a las 7:00, a <b>${esc(r.email)}</b> si hay 🔥 en: ${(r.spots||[]).map(id=>esc(nm(id))).join(", ")}.${r.top?`<br>Top spot: <b>${esc(nm(r.top))}</b>`:""}`;
   $("cfgBtn").textContent = r.email ? "Cambiar alertas, nombre o email" : "Registrarme para recibir alertas"; }
 $("mineBtn").addEventListener("click", ()=>{ renderAlertSum(); renderMine(); mineLastFocus=document.activeElement; $("minePanel").hidden=false; $("mineClose").focus(); });
 $("mineClose").addEventListener("click", closeMine);

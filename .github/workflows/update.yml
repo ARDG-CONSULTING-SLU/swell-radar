@@ -1,8 +1,8 @@
 name: Actualizar previsión y alertas
 on:
   schedule:
-    # 6:35, 13:35 y 19:35 de Madrid (invierno UTC+1 y verano UTC+2); el script comprueba la hora
-    - cron: '35 4,5,11,12,17,18 * * *'
+    # 6:50, 13:50 y 19:50 de Madrid (invierno UTC+1 y verano UTC+2); el script comprueba la hora
+    - cron: '50 4,5,11,12,17,18 * * *'
     # cada 15 minutos: email de bienvenida a quien se acaba de registrar
     - cron: '*/15 * * * *'
   workflow_dispatch:
