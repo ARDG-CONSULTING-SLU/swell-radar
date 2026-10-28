@@ -1521,6 +1521,7 @@ async function register(e){
   if(!ok) return msg("Marca la casilla para recibir las alertas.");
   const btn=$("whoSave"); btn.disabled=true; btn.textContent="Guardando…";
   try{ await brevoSend(email,name,ids,top); }catch(err){ /* sin conexión: se guarda igual en el móvil */ }
+  try{ const old=JSON.parse(localStorage.getItem(REG_KEY)||"{}").email; if(old && old.toLowerCase()!==email.toLowerCase()) await brevoSend(old,name,[],""); }catch(err){} // email cambiado: el antiguo deja de recibir alertas
   try{ localStorage.setItem(REG_KEY, JSON.stringify({name,email,spots:ids,top,ok:true,at:Date.now()})); }catch(e){}
   hidden = new Set(SPOTS.filter(s=>!ids.includes(s.id)).map(s=>s.id)); try{ saveHidden(); }catch(e){}
   topSpot = top; try{ localStorage.setItem(TOP_KEY, top); }catch(e){}
