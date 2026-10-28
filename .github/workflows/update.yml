@@ -1,0 +1,38 @@
+name: Actualizar previsión y alertas
+on:
+  schedule:
+    # 6:35, 13:35 y 19:35 de Madrid (invierno UTC+1 y verano UTC+2); el script comprueba la hora
+    - cron: '35 4,5,11,12,17,18 * * *'
+  workflow_dispatch:
+    inputs:
+      test_email:
+        description: 'Enviar solo una alerta de prueba a este email (vacío = funcionamiento normal)'
+        required: false
+        default: ''
+permissions:
+  contents: write
+concurrency:
+  group: update
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Descargar previsión, generar data.json y enviar alertas
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_LIST_ID: '37'
+          TEST_EMAIL: ${{ github.event.inputs.test_email }}
+          SKIP_HOUR_CHECK: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+        run: node scripts/run.js
+      - name: Guardar cambios
+        run: |
+          git config user.name "Swell Radar bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data.json .alerts/state.json 2>/dev/null || true
+          git diff --cached --quiet || (git commit -m "Previsión actualizada $(TZ=Europe/Madrid date '+%d/%m %H:%M')" && git push)
