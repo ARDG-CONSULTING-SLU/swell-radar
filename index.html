@@ -546,6 +546,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
   .bar-row .track{height:auto;min-height:30px}
   .bar-row .track .bv{white-space:normal;flex-wrap:wrap;row-gap:2px;height:auto;min-height:30px;padding:4px 12px;line-height:1.35}
 }
+.hh-pick{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%}.hh-pick .hh-sel{min-width:0;flex:1 1 auto}.hh-pick select{min-width:0;width:100%}.hh-pick #hhCam{flex:none}
 .cfg-box{margin-top:6px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;border:1.5px solid var(--line);background:var(--card);border-radius:var(--r-md);padding:14px}.cfg-box b{font-family:var(--display);font-size:15px}.cfg-box small{color:var(--fg2);font-size:13px}
 .reg-skip{border:0;background:none;color:var(--fg3);font-size:13px;text-decoration:underline;padding:6px}
 
@@ -694,7 +695,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
   <section id="hhSec">
     <div class="sec-h"><h2>Hoy y mañana, hora a hora</h2><p>De 8:00 a 20:00 · elige un spot o todos · la barra es la altura de la ola</p></div>
     <div class="hh-ctl"><div class="tabs" id="hhTabs" role="group" aria-label="Elegir día"></div>
-      <label class="hh-sel"><span>Spot</span><select id="hhSpot" aria-label="Elegir spot"></select></label></div>
+      <div class="hh-pick"><label class="hh-sel"><span>Spot</span><select id="hhSpot" aria-label="Elegir spot"></select></label><span id="hhCam"></span></div></div>
     <div class="hh-box" id="hh"></div>
     <div class="wv-legend" id="wvLegend"></div>
   </section>
@@ -1302,6 +1303,7 @@ function renderHH(){ renderWvLegend();
   }
   const tv=topVisible(), tsObj=tv&&vs.find(s=>s.id===tv);
   sel.innerHTML = (tsObj?`<option value="${tsObj.id}" ${state.hhSpot===tsObj.id?"selected":""}>★ Top spot · ${tsObj.name}</option>`:"") + `<option value="all" ${state.hhSpot==="all"?"selected":""}>Todos mis spots</option>` + vs.filter(s=>s.id!==tv).map(s=>`<option value="${s.id}" ${state.hhSpot===s.id?"selected":""}>${s.name}</option>`).join("");
+  { const cs=SPOTS.find(x=>x.id===state.hhSpot); $("hhCam").innerHTML = cs ? camIco(cs,true) : ""; }
   sel.onchange=()=>{ state.hhSpot=sel.value; renderHH(); };
   const row=(s,x,i,mx,lead)=>{ const hh=x.m.h[i], p=x.m.p[i], lv=level(hh,p), w=wx(x.w.c[i]), rel=windRel(s,x.w.wd[i],x.w.ws[i],x.w.wg[i]);
     return `<div class="bar-row hh-row ${lead.all?"hh-all":""} lv${lv} ${lead.now?"now":""}">
