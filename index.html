@@ -1472,11 +1472,23 @@ window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferred
 function isStandalone(){ try{ return matchMedia("(display-mode: standalone)").matches || navigator.standalone===true; }catch(e){ return false; } }
 async function openInstall(){
   if(deferredInstall){ deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(e){} deferredInstall=null; return; }
-  const ua=navigator.userAgent||"", ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1), crios=/CriOS/.test(ua), android=/Android/.test(ua);
-  const safari=`<h3>iPhone · Safari</h3><ol><li>Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba), abajo.</li><li>Baja y elige <b>Añadir a pantalla de inicio</b>.</li><li>Pulsa <b>Añadir</b>.</li></ol>`;
-  const chromeIos=`<h3>iPhone · Chrome</h3><ol><li>Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha), arriba a la derecha en la barra de la dirección.</li><li>Elige <b>Añadir a pantalla de inicio</b>.</li><li>Pulsa <b>Añadir</b>.</li></ol>`;
-  const andr=`<h3>Android · Chrome</h3><ol><li>Pulsa el menú <b>⋮</b>, arriba a la derecha.</li><li>Elige <b>Instalar aplicación</b> o <b>Añadir a pantalla de inicio</b>.</li><li>Confirma con <b>Instalar</b>.</li></ol>`;
-  $("instBody").innerHTML = ios ? (crios? chromeIos+safari : safari+chromeIos) : android ? andr : `<p>Abre este enlace en tu móvil: <b>${esc(location.origin+location.pathname)}</b></p>`+safari+chromeIos+andr;
+  const ua=navigator.userAgent||"", ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1), android=/Android/.test(ua);
+  const B = {
+    safari:  ["iPhone · Safari", "Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba), abajo.", "Baja y elige <b>Añadir a pantalla de inicio</b>.", "Pulsa <b>Añadir</b>."],
+    crios:   ["iPhone · Chrome", "Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha), arriba a la derecha en la barra de la dirección.", "Elige <b>Añadir a pantalla de inicio</b>.", "Pulsa <b>Añadir</b>."],
+    chrome:  ["Android · Chrome", "Pulsa el menú <b>⋮</b>, arriba a la derecha.", "Elige <b>Añadir a pantalla de inicio</b> o <b>Instalar aplicación</b>.", "Confirma con <b>Instalar</b> o <b>Añadir</b>."],
+    samsung: ["Android · Samsung Internet", "Pulsa el menú <b>☰</b>, abajo a la derecha.", "Elige <b>Añadir página a</b> y luego <b>Pantalla de inicio</b> (o pulsa el icono de instalar de la barra de la dirección si aparece).", "Confirma con <b>Añadir</b>."],
+    firefox: ["Android · Firefox", "Pulsa el menú <b>⋮</b>.", "Elige <b>Añadir a pantalla de inicio</b> o <b>Instalar</b>.", "Confirma con <b>Añadir</b>."],
+    edge:    ["Android · Edge", "Pulsa el menú <b>···</b>, abajo en el centro.", "Elige <b>Añadir al teléfono</b> o <b>Añadir a pantalla de inicio</b>.", "Confirma con <b>Añadir</b>."],
+    other:   ["Android · otro navegador (Opera, Xiaomi, Huawei…)", "Abre el menú del navegador (<b>⋮</b>, <b>☰</b> o <b>···</b>).", "Busca <b>Añadir a pantalla de inicio</b>, <b>Instalar</b> o <b>Añadir página a</b>.", "Si no aparece, abre el enlace en <b>Chrome</b> y hazlo desde allí."]
+  };
+  const blk = k => `<h3>${B[k][0]}</h3><ol>${B[k].slice(1).map(t=>`<li>${t}</li>`).join("")}</ol>`;
+  let first;
+  if(ios) first = /CriOS/.test(ua) ? "crios" : "safari";
+  else if(android) first = /SamsungBrowser/.test(ua) ? "samsung" : /Firefox/.test(ua) ? "firefox" : /EdgA/.test(ua) ? "edge" : /OPR|MiuiBrowser|HuaweiBrowser|HeyTapBrowser|UCBrowser/.test(ua) ? "other" : /Chrome/.test(ua) ? "chrome" : "other";
+  const rest = (ios ? ["safari","crios"] : android ? ["chrome","samsung","firefox","edge","other"] : ["safari","crios","chrome","samsung","firefox","edge","other"]).filter(k=>k!==first);
+  $("instBody").innerHTML = (first ? `<p style="margin:0;color:var(--fg2);font-size:13.5px">Tu navegador:</p>${blk(first)}` : `<p style="margin:0">Abre este enlace en tu móvil: <b>${esc(location.origin+location.pathname)}</b></p>`)
+    + `<details class="more"${first?"":" open"}><summary>${first?"Otros navegadores":"Instrucciones"}</summary>${rest.map(blk).join("")}</details>`;
   $("instPanel").hidden=false;
 }
 function openWho(ov){
