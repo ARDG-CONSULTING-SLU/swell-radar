@@ -528,6 +528,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 .camic{display:inline-flex;align-items:center;flex:none;margin-left:6px;font-size:13px;line-height:1;cursor:pointer;border-radius:999px;padding:2px 5px;background:color-mix(in srgb,var(--aqua) 18%,transparent);text-decoration:none;font-family:var(--body);font-weight:700;color:var(--fg)}
 .camic.big{font-size:13px;padding:4px 10px;vertical-align:middle}
 .camic:hover{background:color-mix(in srgb,var(--aqua) 35%,transparent)}
+.mine-two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.mine-two .mine-row{padding:10px 12px}
 .set-sec{display:flex;flex-direction:column;gap:6px;align-items:flex-start}.set-sec h3{margin:4px 0 0;font-family:var(--display);font-size:16px;font-weight:800}.set-sec small{color:var(--fg3);font-size:12.5px}
 .set-mail{border:1.5px solid var(--coral);background:color-mix(in srgb,var(--coral) 8%,var(--card));border-radius:var(--r-md);padding:14px}
 .set-sum{font-size:14px;color:var(--fg);line-height:1.45}.set-sum b{font-weight:700}
@@ -609,9 +610,8 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
     </div>
     <section class="set-sec set-mail"><h3>📧 Alertas por email</h3><div id="alertSum" class="set-sum"></div><button class="srcbtn reg-go" id="cfgBtn" type="button">Cambiar alertas, nombre o email</button><small>Aquí también puedes darte de baja.</small></section>
     <section class="set-sec"><h3>📱 Lo que ves en la app</h3><small>Solo en este móvil. No cambia tus alertas por email.</small></section>
-    <label class="mine-row" style="margin-bottom:6px"><input type="checkbox" id="mineBuoys"><span><b>Ver información de las boyas</b><small>Ola medida en directo por Puertos del Estado</small></span></label>
-    <label class="mine-row" style="margin-bottom:6px"><input type="checkbox" id="mineIso"><span><b>Ver mapa de isobaras</b><small>Borrascas, anticiclones y viento, 7 días</small></span></label>
-    <label class="mine-row" style="margin-bottom:10px"><input type="checkbox" id="mineWx"><span><b>Ver mapa del tiempo</b><small>Nubes y lluvia, 7 días</small></span></label>
+    <div class="mine-two"><label class="mine-row"><input type="checkbox" id="mineMaps"><span><b>Ver mapas</b><small>Isobaras y tiempo</small></span></label>
+    <label class="mine-row"><input type="checkbox" id="mineBuoys"><span><b>Ver boyas</b><small>Ola medida en directo</small></span></label></div>
     <div class="mine-list" id="mineList"></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="srcbtn" id="mineAll" type="button">Mostrar todos</button><span id="mineMsg" style="color:var(--coral);font-size:13px;font-weight:600"></span></div>
   </div>
@@ -1583,9 +1583,8 @@ function renderMine(){
   $("mineCount").textContent=`${VIS().length}/${SPOTS.length}`;
   const bb=$("mineBuoys"); bb.checked=showBuoys;
   bb.onchange=()=>{ showBuoys=bb.checked; try { localStorage.setItem(BUOY_KEY, showBuoys?"1":"0"); } catch(e) {} renderBuoys(); };
-  const bi=$("mineIso"), bw=$("mineWx"); bi.checked=showIso; bw.checked=showWx;
-  bi.onchange=()=>{ showIso=bi.checked; try { localStorage.setItem(BUOY_KEY+"-iso", showIso?"1":"0"); } catch(e) {} renderMaps(); };
-  bw.onchange=()=>{ showWx=bw.checked; try { localStorage.setItem(BUOY_KEY+"-wx", showWx?"1":"0"); } catch(e) {} renderMaps(); };
+  const bm=$("mineMaps"); bm.checked=showIso||showWx;
+  bm.onchange=()=>{ showIso=showWx=bm.checked; try { localStorage.setItem(BUOY_KEY+"-iso", bm.checked?"1":"0"); localStorage.setItem(BUOY_KEY+"-wx", bm.checked?"1":"0"); } catch(e) {} renderMaps(); };
 }
 function renderAllButStatus(){ if(hidden.has(state.spot)) state.spot=VIS()[0].id; renderHello(); renderVerdict(); renderBars(); renderNow(); renderBuoys(); renderCams(); renderHH(); renderHeat(); renderIso(); renderTabs(); renderChart(); renderHours(); }
 function render(){ renderStatus(); renderAllButStatus(); try{updateJump()}catch(e){} }
