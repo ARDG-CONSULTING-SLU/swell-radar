@@ -520,6 +520,8 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 .reg-msg{font-size:13px;font-weight:700;color:var(--bad);min-height:1px}
 .reg-msg:empty{display:none}
 .srcbtn.reg-go{width:auto;height:auto;padding:12px 26px;background:var(--coral);border-color:var(--coral);color:var(--coral-ink)}
+.inst{display:flex;flex-direction:column;gap:12px;font-size:15px}.inst ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}.inst h3{margin:6px 0 0;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg3)}
+.instbtn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--coral);background:color-mix(in srgb,var(--coral) 12%,var(--card));color:var(--fg);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13.5px}
 .reg-skip{border:0;background:none;color:var(--fg3);font-size:13px;text-decoration:underline;padding:6px}
 
 /* ---- ajustes móvil: que no se monten los textos ---- */
@@ -568,7 +570,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 
 <div class="overlay" id="whoPanel" role="dialog" aria-modal="true" aria-labelledby="whoTitle" hidden>
   <div class="panel" style="max-width:560px">
-    <div class="panel-h"><div><div class="eyebrow">Swell Radar</div><h2 id="whoTitle">Regístrate</h2><p>Solo la primera vez en este móvil. Con tu email te avisamos cuando haya 🔥 en tus spots.</p></div></div>
+    <div class="panel-h"><div><div class="eyebrow">Swell Radar</div><h2 id="whoTitle">Regístrate</h2><p id="whoSub">Solo la primera vez en este móvil. Con tu email te avisamos cuando haya 🔥 en tus spots.</p></div></div>
     <form id="regForm" class="reg" novalidate>
       <label class="reg-f"><span>Nombre</span><input id="whoInput" type="text" maxlength="24" required placeholder="Tu nombre" autocomplete="given-name"></label>
       <label class="reg-f"><span>Email</span><input id="regEmail" type="email" required placeholder="tu@email.com" autocomplete="email" inputmode="email"></label>
@@ -576,8 +578,16 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
       <label class="reg-f"><span>Tu top spot</span><select id="regTop"></select></label>
       <label class="reg-ok"><input id="regOk" type="checkbox" required><span>Acepto recibir por email las alertas de Swell Radar (ARDG Consulting). Puedo darme de baja cuando quiera desde el enlace de cada email.</span></label>
       <div class="reg-msg" id="regMsg" role="alert"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="srcbtn reg-go" id="whoSave" type="submit">Entrar</button><button class="reg-skip" id="regSkip" type="button" hidden>Ahora no</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="srcbtn reg-go" id="whoSave" type="submit">Entrar</button><button class="reg-skip" id="regSkip" type="button" hidden>Ahora no</button><button class="reg-skip" id="regStop" type="button" hidden>Dejar de recibir alertas</button></div>
     </form>
+  </div>
+</div>
+
+<div class="overlay" id="instPanel" role="dialog" aria-modal="true" aria-labelledby="instTitle" hidden>
+  <div class="panel" style="max-width:480px">
+    <div class="panel-h"><div><h2 id="instTitle">Swell Radar en tu móvil</h2><p>Queda como una app más, con el icono de la ola.</p></div>
+      <button class="xbtn" id="instClose" type="button" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div id="instBody" class="inst"></div>
   </div>
 </div>
 
@@ -1442,8 +1452,26 @@ function setWho(name){ who = name; try { localStorage.setItem(WHO_KEY, name); } 
 // Registro (nombre, email, spots) → lista "Swell Radar" de Brevo
 const BREVO_FORM = "https://b14e9b12.sibforms.com/serve/MUIFAPUCxymaUKYdFZ-9e_BsT_qFcoQ-5IaLLynSnzzQq8gW6wIrtf13HrvN-8Mgekvpr6xWTn-Eze7hUnP0X63w_DZjwoJTSRCLMZK2K5fCY8auwye3GACPJ0DmPUrd-ZgI1-hK0DYx1iHu1yhsRVvElTcr3zTN3DLmGRkba9u_QurqyiEZE3uARcWUsbvHBuJ8lmg00fASAW4Y";
 const REG_KEY = WHO_KEY+"-reg";
-function openWho(){
+let deferredInstall=null;
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredInstall=e; });
+function isStandalone(){ try{ return matchMedia("(display-mode: standalone)").matches || navigator.standalone===true; }catch(e){ return false; } }
+async function openInstall(){
+  if(deferredInstall){ deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(e){} deferredInstall=null; return; }
+  const ua=navigator.userAgent||"", ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1), crios=/CriOS/.test(ua), android=/Android/.test(ua);
+  const safari=`<h3>iPhone · Safari</h3><ol><li>Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba), abajo.</li><li>Baja y elige <b>Añadir a pantalla de inicio</b>.</li><li>Pulsa <b>Añadir</b>.</li></ol>`;
+  const chromeIos=`<h3>iPhone · Chrome</h3><ol><li>Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha), arriba a la derecha en la barra de la dirección.</li><li>Elige <b>Añadir a pantalla de inicio</b>.</li><li>Pulsa <b>Añadir</b>.</li></ol>`;
+  const andr=`<h3>Android · Chrome</h3><ol><li>Pulsa el menú <b>⋮</b>, arriba a la derecha.</li><li>Elige <b>Instalar aplicación</b> o <b>Añadir a pantalla de inicio</b>.</li><li>Confirma con <b>Instalar</b>.</li></ol>`;
+  $("instBody").innerHTML = ios ? (crios? chromeIos+safari : safari+chromeIos) : android ? andr : `<p>Abre este enlace en tu móvil: <b>${esc(location.origin+location.pathname)}</b></p>`+safari+chromeIos+andr;
+  $("instPanel").hidden=false;
+}
+function openWho(ov){
   let reg={}; try{ reg=JSON.parse(localStorage.getItem(REG_KEY)||"{}"); }catch(e){}
+  if(ov) reg=Object.assign({}, reg, ov);
+  const isReg=!!(reg.email && reg.ok);
+  $("whoTitle").textContent = isReg ? "Mis alertas" : "Regístrate";
+  $("whoSub").textContent = isReg ? "Cambia tus spots o tu top spot y guarda. Los cambios valen para las próximas alertas." : "Solo la primera vez en este móvil. Con tu email te avisamos cuando haya 🔥 en tus spots.";
+  $("whoSave").textContent = isReg ? "Guardar cambios" : "Entrar";
+  $("regStop").hidden = !isReg;
   $("whoInput").value = reg.name || who || "";
   $("regEmail").value = reg.email || "";
   const sel = new Set(reg.spots || SPOTS.filter(s=>!hidden.has(s.id)).map(s=>s.id));
@@ -1454,6 +1482,22 @@ function openWho(){
   $("regOk").checked = !!reg.ok; $("regMsg").textContent="";
   $("regSkip").hidden = !who;
   $("whoPanel").hidden=false;
+  if(ov && ov.baja) $("regMsg").textContent="Para dejar de recibir alertas pulsa «Dejar de recibir alertas».";
+}
+function brevoSend(email,name,ids,top){
+  const fd=new URLSearchParams(); fd.append("EMAIL",email); fd.append("NOMBRE",name);
+  if(ids.length) ids.forEach(id=>{ const s=SPOTS.find(x=>x.id===id); if(s) fd.append("SPOTS_SWELL_RADAR[]", s.name); }); else fd.append("SPOTS_SWELL_RADAR[]","");
+  const TOPN={montgat:1,masnou:2,balis:3,mataro:4,cabrera:5,premia:6,santmarti:7,vilassar:8,arenys:9,pals:10}; if(TOPN[top]) fd.append("TOP_SPOT_SWELL_RADAR", String(TOPN[top]));
+  fd.append("OPT_IN","1"); fd.append("email_address_check",""); fd.append("locale","es");
+  return fetch(BREVO_FORM, {method:"POST", mode:"no-cors", body:fd});
+}
+async function stopAlerts(){
+  const name=$("whoInput").value.trim().slice(0,24)||who||"", email=$("regEmail").value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ $("regMsg").textContent="Revisa el email."; return; }
+  try{ await brevoSend(email,name,[],""); }catch(e){}
+  try{ const r=JSON.parse(localStorage.getItem(REG_KEY)||"{}"); localStorage.setItem(REG_KEY, JSON.stringify(Object.assign(r,{email,ok:false,spots:[],at:Date.now()}))); }catch(e){}
+  $("regMsg").textContent="Hecho: ya no recibirás alertas. Puedes volver a activarlas cuando quieras desde «Mis datos de registro».";
+  $("regStop").hidden=true;
 }
 async function register(e){
   if(e) e.preventDefault();
@@ -1467,17 +1511,11 @@ async function register(e){
   if(!top) return msg("Elige tu top spot.");
   if(!ok) return msg("Marca la casilla para recibir las alertas.");
   const btn=$("whoSave"); btn.disabled=true; btn.textContent="Guardando…";
-  try{
-    const fd=new URLSearchParams(); fd.append("EMAIL",email); fd.append("NOMBRE",name);
-    ids.forEach(id=>{ const s=SPOTS.find(x=>x.id===id); if(s) fd.append("SPOTS_SWELL_RADAR[]", s.name); });
-    const TOPN={montgat:1,masnou:2,balis:3,mataro:4,cabrera:5,premia:6,santmarti:7,vilassar:8,arenys:9,pals:10}; if(TOPN[top]) fd.append("TOP_SPOT_SWELL_RADAR", String(TOPN[top]));
-    fd.append("OPT_IN","1"); fd.append("email_address_check",""); fd.append("locale","es");
-    await fetch(BREVO_FORM, {method:"POST", mode:"no-cors", body:fd});
-  }catch(err){ /* sin conexión: se guarda igual en el móvil */ }
+  try{ await brevoSend(email,name,ids,top); }catch(err){ /* sin conexión: se guarda igual en el móvil */ }
   try{ localStorage.setItem(REG_KEY, JSON.stringify({name,email,spots:ids,top,ok:true,at:Date.now()})); }catch(e){}
   hidden = new Set(SPOTS.filter(s=>!ids.includes(s.id)).map(s=>s.id)); try{ saveHidden(); }catch(e){}
   topSpot = top; try{ localStorage.setItem(TOP_KEY, top); }catch(e){}
-  btn.disabled=false; btn.textContent="Entrar";
+  btn.disabled=false; btn.textContent="Guardar cambios";
   setWho(name); try{ renderMine(); renderAllButStatus(); }catch(e){}
 }
 function renderHello(){
@@ -1498,8 +1536,9 @@ function renderHello(){
            : `${lab} no llega al mínimo para surfear (0,5 m y 6 s). Lo que más mueve: ${at}, ${fmt(best.h)} m y ${fmt(best.p,1)} s.`;
       const wt=waterAt(best.s.id,ts,best.i); if(wt!=null){ const S=suitFor(wt); line+=` <span class="suit-day">${suitIco(S,22)} Traje ${lab.toLowerCase()}: <b>${S.t}</b> (agua ${fmt(wt,0)}°)</span>`; } }
   }
-  box.innerHTML = `<h2>Hola, <span>${esc(who)}</span></h2>${line?`<p>${line}</p>`:""}<button type="button" id="notMe">Mis datos de registro</button>`;
-  $("notMe").addEventListener("click", openWho);
+  box.innerHTML = `<h2>Hola, <span>${esc(who)}</span></h2>${line?`<p>${line}</p>`:""}<button type="button" id="notMe">Mis alertas</button>${isStandalone()?"":'<button type="button" class="instbtn" id="instBtn">📲 Instalar en el móvil</button>'}`;
+  $("notMe").addEventListener("click", ()=>openWho());
+  const ib=$("instBtn"); if(ib) ib.addEventListener("click", openInstall);
 }
 const HIDE_KEY = "swr-hidden-maresme";
 const BUOY_KEY = "swr-buoys-maresme";
@@ -1632,7 +1671,19 @@ document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("minePanel")
 renderMine();
 $("regForm").addEventListener("submit", register);
 $("regSkip").addEventListener("click", ()=>{ $("whoPanel").hidden=true; });
-if(!who) openWho(); else renderHello();
+(function(){
+  let q; try{ q=new URLSearchParams(location.search); }catch(e){ q=null; }
+  if(q && (q.has("editar")||q.has("baja"))){
+    const ov={ email:q.get("e")||"", name:q.get("n")||undefined, ok:true, baja:q.has("baja") };
+    const sp=(q.get("s")||"").split(",").filter(id=>SPOTS.some(x=>x.id===id)); if(sp.length) ov.spots=sp;
+    const t=q.get("t"); if(t && SPOTS.some(x=>x.id===t)) ov.top=t;
+    if(!who && ov.name) { who=ov.name; try{ localStorage.setItem(WHO_KEY, who); }catch(e){} }
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    renderHello(); openWho(ov);
+  } else if(!who) openWho(); else renderHello();
+})();
+$("regStop").addEventListener("click", stopAlerts);
+$("instClose").addEventListener("click", ()=>{ $("instPanel").hidden=true; });
 $("srcClose").addEventListener("click", closeSources);
 $("srcPanel").addEventListener("click", e=>{ if(e.target.id==="srcPanel") closeSources(); });
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("srcPanel").hidden) closeSources(); });
