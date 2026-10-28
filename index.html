@@ -505,6 +505,22 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 #mapSec #mixSec .sec-h h2{display:none}
 #mapSec #mixSec .sec-h{margin-bottom:8px}
 
+/* registro */
+.reg{display:flex;flex-direction:column;gap:12px}
+.reg-f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:700;color:var(--fg2)}
+.reg-f input{font:inherit;font-size:16px;font-weight:500;color:var(--fg);background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:11px 14px}
+.reg-f input:focus{outline:none;border-color:var(--coral)}
+.reg-spots{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0;background:var(--card)}
+.reg-spots legend{font-size:13px;font-weight:700;color:var(--fg2);padding:0 4px}
+#regSpots{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 10px}
+.reg-sp{display:flex;align-items:center;gap:8px;font-size:14px;padding:5px 0;cursor:pointer}
+.reg-sp input,.reg-ok input{width:20px;height:20px;accent-color:var(--coral);flex:none}
+.reg-ok{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--fg2);line-height:1.4;cursor:pointer}
+.reg-msg{font-size:13px;font-weight:700;color:var(--bad);min-height:1px}
+.reg-msg:empty{display:none}
+.srcbtn.reg-go{width:auto;height:auto;padding:12px 26px;background:var(--coral);border-color:var(--coral);color:var(--coral-ink)}
+.reg-skip{border:0;background:none;color:var(--fg3);font-size:13px;text-decoration:underline;padding:6px}
+
 /* ---- ajustes móvil: que no se monten los textos ---- */
 .wv-legend span:last-child{display:block;line-height:1.7}
 .wv-legend span:last-child .swd{margin-right:4px}
@@ -551,9 +567,15 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 
 <div class="overlay" id="whoPanel" role="dialog" aria-modal="true" aria-labelledby="whoTitle" hidden>
   <div class="panel" style="max-width:560px">
-    <div class="panel-h"><div><div class="eyebrow">Weekend Warriors</div><h2 id="whoTitle">¿Quién eres?</h2><p>Elige tu nombre. Solo te lo preguntaré esta vez en este dispositivo.</p></div></div>
-    <div class="who-grid" id="whoGrid"></div>
-    <div class="who-other"><label for="whoInput">¿No estás en la lista?</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="whoInput" type="text" maxlength="24" placeholder="Escribe tu nombre" autocomplete="given-name"><button class="srcbtn" id="whoSave" type="button">Guardar</button></div></div>
+    <div class="panel-h"><div><div class="eyebrow">Swell Radar</div><h2 id="whoTitle">Regístrate</h2><p>Solo la primera vez en este móvil. Con tu email te avisamos cuando haya 🔥 en tus spots.</p></div></div>
+    <form id="regForm" class="reg" novalidate>
+      <label class="reg-f"><span>Nombre</span><input id="whoInput" type="text" maxlength="24" required placeholder="Tu nombre" autocomplete="given-name"></label>
+      <label class="reg-f"><span>Email</span><input id="regEmail" type="email" required placeholder="tu@email.com" autocomplete="email" inputmode="email"></label>
+      <fieldset class="reg-spots"><legend>¿De qué spots quieres alertas?</legend><div id="regSpots"></div></fieldset>
+      <label class="reg-ok"><input id="regOk" type="checkbox" required><span>Acepto recibir por email las alertas de Swell Radar (ARDG Consulting). Puedo darme de baja cuando quiera desde el enlace de cada email.</span></label>
+      <div class="reg-msg" id="regMsg" role="alert"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="srcbtn reg-go" id="whoSave" type="submit">Entrar</button><button class="reg-skip" id="regSkip" type="button" hidden>Ahora no</button></div>
+    </form>
   </div>
 </div>
 
@@ -1414,10 +1436,39 @@ const WHO_KEY = "swr-who-maresme";
 let who = null; try { who = localStorage.getItem(WHO_KEY); if(who==="Eloy"){ who="Eloi"; localStorage.setItem(WHO_KEY, who); } } catch(e) {}
 const esc = t => String(t).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function setWho(name){ who = name; try { localStorage.setItem(WHO_KEY, name); } catch(e) {} $("whoPanel").hidden=true; renderHello(); syncMine(); }
+// Registro (nombre, email, spots) → lista "Swell Radar" de Brevo
+const BREVO_FORM = "https://b14e9b12.sibforms.com/serve/MUIFAPUCxymaUKYdFZ-9e_BsT_qFcoQ-5IaLLynSnzzQq8gW6wIrtf13HrvN-8Mgekvpr6xWTn-Eze7hUnP0X63w_DZjwoJTSRCLMZK2K5fCY8auwye3GACPJ0DmPUrd-ZgI1-hK0DYx1iHu1yhsRVvElTcr3zTN3DLmGRkba9u_QurqyiEZE3uARcWUsbvHBuJ8lmg00fASAW4Y";
+const REG_KEY = WHO_KEY+"-reg";
 function openWho(){
-  $("whoGrid").innerHTML = WARRIORS.map(n=>`<button class="who-btn" type="button" data-n="${n}" aria-pressed="${who===n}">${n}</button>`).join("");
-  $("whoGrid").querySelectorAll(".who-btn").forEach(b=>b.addEventListener("click",()=>setWho(b.dataset.n)));
+  let reg={}; try{ reg=JSON.parse(localStorage.getItem(REG_KEY)||"{}"); }catch(e){}
+  $("whoInput").value = reg.name || who || "";
+  $("regEmail").value = reg.email || "";
+  const sel = new Set(reg.spots || SPOTS.filter(s=>!hidden.has(s.id)).map(s=>s.id));
+  $("regSpots").innerHTML = SPOTS.map(s=>`<label class="reg-sp"><input type="checkbox" value="${s.id}" ${sel.has(s.id)?"checked":""}><span>${esc(s.name)}</span></label>`).join("");
+  $("regOk").checked = !!reg.ok; $("regMsg").textContent="";
+  $("regSkip").hidden = !who;
   $("whoPanel").hidden=false;
+}
+async function register(e){
+  if(e) e.preventDefault();
+  const name=$("whoInput").value.trim().slice(0,24), email=$("regEmail").value.trim(), ok=$("regOk").checked;
+  const ids=[...$("regSpots").querySelectorAll("input:checked")].map(i=>i.value);
+  const msg=t=>{ $("regMsg").textContent=t; };
+  if(!name) return msg("Escribe tu nombre.");
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return msg("Revisa el email.");
+  if(!ids.length) return msg("Elige al menos un spot.");
+  if(!ok) return msg("Marca la casilla para recibir las alertas.");
+  const btn=$("whoSave"); btn.disabled=true; btn.textContent="Guardando…";
+  try{
+    const fd=new URLSearchParams(); fd.append("EMAIL",email); fd.append("NOMBRE",name);
+    ids.forEach(id=>{ const s=SPOTS.find(x=>x.id===id); if(s) fd.append("SPOTS_SWELL_RADAR[]", s.name); });
+    fd.append("OPT_IN","1"); fd.append("email_address_check",""); fd.append("locale","es");
+    await fetch(BREVO_FORM, {method:"POST", mode:"no-cors", body:fd});
+  }catch(err){ /* sin conexión: se guarda igual en el móvil */ }
+  try{ localStorage.setItem(REG_KEY, JSON.stringify({name,email,spots:ids,ok:true,at:Date.now()})); }catch(e){}
+  hidden = new Set(SPOTS.filter(s=>!ids.includes(s.id)).map(s=>s.id)); try{ saveHidden(); }catch(e){}
+  btn.disabled=false; btn.textContent="Entrar";
+  setWho(name); try{ renderMine(); renderAllButStatus(); }catch(e){}
 }
 function renderHello(){
   const box=$("hello"); if(!who){ box.innerHTML=""; return; }
@@ -1437,7 +1488,7 @@ function renderHello(){
            : `${lab} no llega al mínimo para surfear (0,5 m y 6 s). Lo que más mueve: ${at}, ${fmt(best.h)} m y ${fmt(best.p,1)} s.`;
       const wt=waterAt(best.s.id,ts,best.i); if(wt!=null){ const S=suitFor(wt); line+=` <span class="suit-day">${suitIco(S,22)} Traje ${lab.toLowerCase()}: <b>${S.t}</b> (agua ${fmt(wt,0)}°)</span>`; } }
   }
-  box.innerHTML = `<h2>Hola, <span>${esc(who)}</span></h2>${line?`<p>${line}</p>`:""}<button type="button" id="notMe">No soy ${esc(who)}</button>`;
+  box.innerHTML = `<h2>Hola, <span>${esc(who)}</span></h2>${line?`<p>${line}</p>`:""}<button type="button" id="notMe">Mis datos de registro</button>`;
   $("notMe").addEventListener("click", openWho);
 }
 const HIDE_KEY = "swr-hidden-maresme";
@@ -1569,8 +1620,8 @@ $("minePanel").addEventListener("click", e=>{ if(e.target.id==="minePanel") clos
 $("mineAll").addEventListener("click", ()=>{ hidden.clear(); saveHidden(); renderMine(); renderAllButStatus(); $("mineMsg").textContent=""; });
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("minePanel").hidden) closeMine(); });
 renderMine();
-$("whoSave").addEventListener("click", ()=>{ const v=$("whoInput").value.trim(); if(v) setWho(v.slice(0,24)); });
-$("whoInput").addEventListener("keydown", e=>{ if(e.key==="Enter"){ const v=e.target.value.trim(); if(v) setWho(v.slice(0,24)); } });
+$("regForm").addEventListener("submit", register);
+$("regSkip").addEventListener("click", ()=>{ $("whoPanel").hidden=true; });
 if(!who) openWho(); else renderHello();
 $("srcClose").addEventListener("click", closeSources);
 $("srcPanel").addEventListener("click", e=>{ if(e.target.id==="srcPanel") closeSources(); });
