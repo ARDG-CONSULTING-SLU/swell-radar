@@ -476,6 +476,9 @@ footer b{color:var(--fg2);font-weight:600}
 .mxw{display:inline-flex;align-items:center;gap:1px;font-family:var(--mono);font-size:9.5px;font-weight:600;line-height:1;white-space:nowrap}
 .mxw.wo{color:var(--good)} .mxw.wc{color:var(--fg2)} .mxw.wb{color:var(--bad)} .mxw.wg{color:var(--aqua);background:none;animation:none}
 .mxw .arrow{flex:none}
+.mxo{display:inline-flex;align-items:center;gap:1px;font-family:var(--mono);font-size:9.5px;font-weight:700;line-height:1;white-space:nowrap;color:var(--fg2)}
+.mxo svg{flex:none}.mxo.good{color:var(--good)}.mxo.ok{color:var(--sun)}.mxo.bad{color:var(--bad)}
+@media (min-width:700px){.mxo{font-size:11px}}
 .legend .mxleg{display:block;width:100%;line-height:1.6}
 @media (max-width:370px){.mx{padding:8px 6px}.mxr{grid-template-columns:72px repeat(7,minmax(0,1fr));gap:2px}.mxn{font-size:10.5px}.mxw{font-size:9px}}
 @media (min-width:700px){.mxr{grid-template-columns:200px repeat(7,minmax(0,1fr))}.mxn{font-size:13px}.mxb{max-width:40px;height:54px}.mxv{font-size:12px}.mxp,.mxw{font-size:11px}}
@@ -522,6 +525,9 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 .srcbtn.reg-go{width:auto;height:auto;padding:12px 26px;background:var(--coral);border-color:var(--coral);color:var(--coral-ink)}
 .inst{display:flex;flex-direction:column;gap:12px;font-size:15px}.inst ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}.inst h3{margin:6px 0 0;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg3)}
 .instbtn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--coral);background:color-mix(in srgb,var(--coral) 12%,var(--card));color:var(--fg);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13.5px}
+.camic{display:inline-flex;align-items:center;flex:none;margin-left:6px;font-size:13px;line-height:1;cursor:pointer;border-radius:999px;padding:2px 5px;background:color-mix(in srgb,var(--aqua) 18%,transparent);text-decoration:none;font-family:var(--body);font-weight:700;color:var(--fg)}
+.camic.big{font-size:13px;padding:4px 10px;vertical-align:middle}
+.camic:hover{background:color-mix(in srgb,var(--aqua) 35%,transparent)}
 .reg-skip{border:0;background:none;color:var(--fg3);font-size:13px;text-decoration:underline;padding:6px}
 
 /* ---- ajustes móvil: que no se monten los textos ---- */
@@ -1058,7 +1064,7 @@ function renderBars(){
   const mx = Math.max(1, ...rows.map(r=>r.h||0));
   box.innerHTML = rows.map((r,i)=>{ const rel=windRel(r.s,r.wd,r.ws,r.wg), w=wx(r.c);
     return `<button class="bar-row lv${r.lv}" type="button" data-spot="${r.s.id}" aria-pressed="${state.spot===r.s.id}">
-      <span class="bn"><i>#${i+1}</i>${waveIcon(r.h,22)}<span>${r.s.name}</span>${fireTag(r.h,r.p)}</span>
+      <span class="bn"><i>#${i+1}</i>${waveIcon(r.h,22)}<span>${r.s.name}</span>${camIco(r.s)}${fireTag(r.h,r.p)}</span>
       <span class="track"><span class="fill" style="width:${Math.max(7,(r.h||0)/mx*100)}%"></span><span class="bv">${fmt(r.h)} m · ${fmt(r.p,1)} s · ${LEVELS[r.lv]}${swell(r.x.m.d[ni],r.s,13)}</span></span>
       <span class="bw wchip ${wcls(rel)}">${arrow(r.wd,12)}${fmt(r.ws,0)} km/h · ${rel}</span>
       <span class="bt">${icon(w.k,20)}<span class="num">aire ${fmt(r.t,0)}°</span>${waterTag(r.s.id,ts,ni)}</span>
@@ -1129,7 +1135,7 @@ function renderVerdict(){
     ? `<div class="alert3"><b>${"🔥".repeat(maxT)} Alerta de previsión</b>${al.map(b=>{ const l=dayLabel(days[b.k].date,b.k); return `<span>${"🔥".repeat(b.t)} ${l.a} ${l.b} · ${b.s.name} a las ${hhmm(ts[b.i])} · ${fmt(b.h)} m · ${fmt(b.p,1)} s · ${fmt(b.e,0)} kJ</span>`; }).join("")}</div>`
     : `<div class="alert3 off">Sin fuegos en los próximos 7 días (🔥 desde 0,6 m y 6 s)</div>`;
   const amp=[4,8,14,20,26][top.lv]||4;
-  const head = allFlat ? `Todo plano. El que más mueve: ${top.s.name}` : `${top.s.name}`;
+  const head = (allFlat ? `Todo plano. El que más mueve: ${top.s.name}` : `${top.s.name}`) + camIco(top.s,true);
   const wl = wk ? dayLabel(days[wk.k].date,wk.k) : null;
   const inWin = i => { const hr=parseInt(ts[i].slice(11,13)); return hr>=8 && hr<=20; };
   const gToday = days[0] ? days[0].idx.filter(i=>i>=ni && inWin(i)) : [], gTom = days[1] ? days[1].idx.filter(inWin) : [];
@@ -1139,7 +1145,7 @@ function renderVerdict(){
       return sr.length ? `<span class="sv yes"><b>${lab}</b> ${sr.join(", ")}</span>` : `<span></span>`; };
     const ct=cell(gToday,"Hoy"), cm=cell(gTom,"Mañana");
     if(!ct.includes("sv yes") && !cm.includes("sv yes")) return ""; // solo spots con horas surfeables
-    return `<div class="row grow"><b>${s.name}</b>${ct}${cm}</div>`; }).join("");
+    return `<div class="row grow"><b>${s.name}${camIco(s)}</b>${ct}${cm}</div>`; }).join("");
   const dayBest = days.map((dy,k)=>{ let b=null; VIS().forEach(s=>{ const x=d.spots[s.id]; if(!x) return; const r=bestOfDay(s,x,live(dy,k),ts); if(r&&(!b||r.sc>b.sc)) b={...r,s}; }); return b?{b,dy,k}:null; }).filter(Boolean);
   const dbMax = Math.max(1, ...dayBest.map(o=>o.b.h||0));
   const perDay = dayBest.map(({b,dy,k})=>{
@@ -1183,18 +1189,18 @@ function renderHeat(){
   let html = `<div class="mxr hd"><span></span>${days.map((dy,k)=>{const l=dayLabel(dy.date,k);return `<span>${l.a.slice(0,3)}<small>${l.b}</small></span>`}).join("")}</div>`;
   rows.forEach(({s,m})=>{
     const x=d.spots[s.id];
-    html += `<div class="mxr"><span class="mxn">${s.name}</span>` + m.map((b,k)=>{
+    html += `<div class="mxr"><span class="mxn">${s.name}${camIco(s)}</span>` + m.map((b,k)=>{
       if(!b) return `<span></span>`;
       const lv=level(b.h,b.p), best=bestByDay[k]===s.id, sel=state.spot===s.id&&state.day===k;
       const ws=x.w.ws[b.i], wd=x.w.wd[b.i], rel=windRel(s,wd,ws,x.w.wg[b.i]);
       return `<button class="mxc lv${lv}${best?" best":""}" type="button" data-spot="${s.id}" data-day="${k}" aria-pressed="${sel}" aria-label="${s.name}, ${dayLabel(days[k].date,k).a}: ${fmt(b.h)} m, ${fmt(b.p,1)} s, viento ${fmt(ws,0)} km/h ${rel}${best?", mejor del día":""}">
-        <span class="mxb"><i style="height:${Math.max(8,b.h/MX*100)}%"></i></span><span class="mxv">${fmt(b.h)}</span><span class="mxp">${fmt(b.p,1)}s</span><span class="mxw ${wcls(rel)}">${rel==="Glassy"?"":arrow(wd,10)}${fmt(ws,0)}</span></button>`;
+        <span class="mxb"><i style="height:${Math.max(8,b.h/MX*100)}%"></i></span><span class="mxv">${fmt(b.h)}</span><span class="mxp">${fmt(b.p,1)}s</span>${(()=>{ const od=x.m.d[b.i], f=swFit(s,od); return od==null?"":`<span class="mxo ${f}" title="Ola de ${dirName(od)}">${swell(od,s,9,false).replace(/^<span class="swd[^"]*"[^>]*>/,"").replace(/<\/span>$/,"")}${dirName(od)}</span>`; })()}<span class="mxw ${wcls(rel)}" title="Viento ${fmt(ws,0)} km/h de ${dirName(wd)}">${rel==="Glassy"?"":arrow(wd,10)}${fmt(ws,0)}</span></button>`;
     }).join("") + `</div>`;
   });
   t.innerHTML = html;
   t.querySelectorAll(".mxc").forEach(b=>b.addEventListener("click",()=>{ state.spot=b.dataset.spot; state.day=+b.dataset.day; renderAllButStatus(); openDetail(); }));
   $("legend").innerHTML = LEVELS.map((n,i)=>`<span><i style="background:var(--lv${i})"></i>${n} ${["< 0,3 m","no llega a 0,5 m y 6 s","desde 0,5 m y 6 s","desde 1 m y 6 s","desde 1,5 m y 6 s"][i]}</span>`).join("")
-    + `<span class="mxleg">Viento en km/h, la flecha va hacia donde sopla: <b style="color:var(--aqua)">glassy</b> · <b style="color:var(--good)">offshore</b> · <b style="color:var(--fg2)">cross</b> · <b style="color:var(--bad)">onshore</b> · recuadro = mejor spot del día</span>`;
+    + `<span class="mxleg">Debajo de la altura y el periodo: <b>dirección de la ola</b> (de dónde viene; <b style="color:var(--good)">verde</b> = buena para el spot, <b style="color:var(--sun)">amarillo</b> = aceptable, <b style="color:var(--bad)">rojo</b> = mala) y <b>viento</b> en km/h, la flecha va hacia donde sopla: <b style="color:var(--aqua)">glassy</b> · <b style="color:var(--good)">offshore</b> · <b style="color:var(--fg2)">cross</b> · <b style="color:var(--bad)">onshore</b> · recuadro = mejor spot del día</span>`;
 }
 
 function renderChart(){
@@ -1233,7 +1239,7 @@ function renderTabs(){
 
 function renderHours(){
   const d=state.data, box=$("hours"), s=SPOTS.find(z=>z.id===state.spot);
-  $("dName").textContent=s.name; $("dZone").textContent=`${s.zone} · offshore ${dirName(s.off)} · mejor swell ${s.best}`;
+  $("dName").innerHTML=esc(s.name)+camIco(s,true); $("dZone").textContent=`${s.zone} · offshore ${dirName(s.off)} · mejor swell ${s.best}`;
   const dc=$("dCam"); if(s.cam){ dc.href=s.cam.u; dc.textContent = s.cam.label ? `● Ver cámara de ${s.cam.label}` : "● Ver cámara en directo"; dc.hidden=false; } else dc.hidden=true;
   if(!d){ box.innerHTML=`<div class="empty">La tabla por horas aparecerá al cargar la previsión.</div>`; return; }
   const x=d.spots[s.id], ts=times(d), days=daysOf(ts), ni=nowIndex(ts), dy=days[Math.min(state.day,days.length-1)];
@@ -1289,7 +1295,7 @@ function renderHH(){ renderWvLegend();
     box.innerHTML = idx.map(i=>{
       const r=vs.map(s=>({s,x:d.spots[s.id],sc:slotScore(s,d.spots[s.id],i)})).sort((a,b)=>b.sc-a.sc);
       return `<div class="hh-hour ${i===ni?"now":""}"><div class="hh-ht">${ts[i].slice(11)}${i===ni?" · ahora":""}</div><div class="bars">` +
-        r.map((o,k)=>row(o.s,o.x,i,mx,{all:true, t:o.s.name, sub:k===0&&o.sc>0?`<em class="tag">Top</em>`:""})).join("") + `</div></div>`;
+        r.map((o,k)=>row(o.s,o.x,i,mx,{all:true, t:o.s.name+camIco(o.s), sub:k===0&&o.sc>0?`<em class="tag">Top</em>`:""})).join("") + `</div></div>`;
     }).join("");
     return;
   }
@@ -1452,6 +1458,9 @@ function setWho(name){ who = name; try { localStorage.setItem(WHO_KEY, name); } 
 // Registro (nombre, email, spots) → lista "Swell Radar" de Brevo
 const BREVO_FORM = "https://b14e9b12.sibforms.com/serve/MUIFAPUCxymaUKYdFZ-9e_BsT_qFcoQ-5IaLLynSnzzQq8gW6wIrtf13HrvN-8Mgekvpr6xWTn-Eze7hUnP0X63w_DZjwoJTSRCLMZK2K5fCY8auwye3GACPJ0DmPUrd-ZgI1-hK0DYx1iHu1yhsRVvElTcr3zTN3DLmGRkba9u_QurqyiEZE3uARcWUsbvHBuJ8lmg00fASAW4Y";
 const REG_KEY = WHO_KEY+"-reg";
+function camIco(s,big){ return s&&s.cam ? `<span class="camic${big?" big":""}" role="link" tabindex="0" data-cam="${s.cam.u}" title="Webcam en directo · ${esc(s.cam.n)}" aria-label="Webcam en directo de ${esc(s.name)}">📷${big?" Webcam":""}</span>` : ""; }
+document.addEventListener("click", e=>{ const c=e.target.closest&&e.target.closest(".camic"); if(!c) return; e.preventDefault(); e.stopPropagation(); window.open(c.dataset.cam,"_blank","noopener"); }, true);
+document.addEventListener("keydown", e=>{ const c=e.target.closest&&e.target.closest(".camic"); if(c && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); e.stopPropagation(); window.open(c.dataset.cam,"_blank","noopener"); } }, true);
 let deferredInstall=null;
 window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredInstall=e; });
 function isStandalone(){ try{ return matchMedia("(display-mode: standalone)").matches || navigator.standalone===true; }catch(e){ return false; } }
