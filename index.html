@@ -528,6 +528,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 .camic{display:inline-flex;align-items:center;flex:none;margin-left:6px;font-size:13px;line-height:1;cursor:pointer;border-radius:999px;padding:2px 5px;background:color-mix(in srgb,var(--aqua) 18%,transparent);text-decoration:none;font-family:var(--body);font-weight:700;color:var(--fg)}
 .camic.big{font-size:13px;padding:4px 10px;vertical-align:middle}
 .camic:hover{background:color-mix(in srgb,var(--aqua) 35%,transparent)}
+.cfg-box{margin-top:6px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;border:1.5px solid var(--line);background:var(--card);border-radius:var(--r-md);padding:14px}.cfg-box b{font-family:var(--display);font-size:15px}.cfg-box small{color:var(--fg2);font-size:13px}
 .reg-skip{border:0;background:none;color:var(--fg3);font-size:13px;text-decoration:underline;padding:6px}
 
 /* ---- ajustes móvil: que no se monten los textos ---- */
@@ -582,7 +583,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
       <label class="reg-f"><span>Email</span><input id="regEmail" type="email" required placeholder="tu@email.com" autocomplete="email" inputmode="email"></label>
       <fieldset class="reg-spots"><legend>¿De qué spots quieres alertas?</legend><div id="regSpots"></div></fieldset>
       <label class="reg-f"><span>Tu top spot</span><select id="regTop"></select></label>
-      <label class="reg-ok"><input id="regOk" type="checkbox" required><span>Acepto recibir por email las alertas de Swell Radar (ARDG Consulting). Puedo darme de baja cuando quiera desde el enlace de cada email.</span></label>
+      <label class="reg-ok"><input id="regOk" type="checkbox" required><span>Acepto recibir por email las alertas de Swell Radar (ARDG Consulting). Puedo cambiarlo o darme de baja cuando quiera desde Mis spots → Configuración o desde el enlace de cada email.</span></label>
       <div class="reg-msg" id="regMsg" role="alert"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="srcbtn reg-go" id="whoSave" type="submit">Entrar</button><button class="reg-skip" id="regSkip" type="button" hidden>Ahora no</button><button class="reg-skip" id="regStop" type="button" hidden>Dejar de recibir alertas</button></div>
     </form>
@@ -608,6 +609,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
     <label class="mine-row" style="margin-bottom:10px"><input type="checkbox" id="mineWx"><span><b>Ver mapa del tiempo</b><small>Nubes y lluvia, 7 días</small></span></label>
     <div class="mine-list" id="mineList"></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="srcbtn" id="mineAll" type="button">Mostrar todos</button><span id="mineMsg" style="color:var(--coral);font-size:13px;font-weight:600"></span></div>
+    <div class="cfg-box"><b>⚙️ Configuración</b><small>Tu nombre, tu email y las alertas por email: qué spots, tu top spot o darte de baja.</small><button class="srcbtn reg-go" id="cfgBtn" type="button">Abrir configuración</button></div>
   </div>
 </div>
 
@@ -1489,7 +1491,7 @@ function openWho(ov){
     $("regTop").innerHTML = SPOTS.filter(s=>ids.includes(s.id)).map(s=>`<option value="${s.id}" ${s.id===cur?"selected":""}>${esc(s.name)}</option>`).join(""); };
   $("regTop").innerHTML=""; fillTop(); $("regSpots").onchange=fillTop;
   $("regOk").checked = !!reg.ok; $("regMsg").textContent="";
-  $("regSkip").hidden = !who;
+  $("regSkip").hidden = !who; $("regSkip").textContent = isReg ? "Cerrar" : "Ahora no";
   $("whoPanel").hidden=false;
   if(ov && ov.baja) $("regMsg").textContent="Para dejar de recibir alertas pulsa «Dejar de recibir alertas».";
 }
@@ -1693,6 +1695,7 @@ $("regSkip").addEventListener("click", ()=>{ $("whoPanel").hidden=true; });
   } else if(!who) openWho(); else renderHello();
 })();
 $("regStop").addEventListener("click", stopAlerts);
+$("cfgBtn").addEventListener("click", ()=>{ $("minePanel").hidden=true; openWho(); });
 $("instClose").addEventListener("click", ()=>{ $("instPanel").hidden=true; });
 $("srcClose").addEventListener("click", closeSources);
 $("srcPanel").addEventListener("click", e=>{ if(e.target.id==="srcPanel") closeSources(); });
