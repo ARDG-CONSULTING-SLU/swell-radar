@@ -768,6 +768,7 @@ const SPOTS = [
   {id:"masnou",   name:"Las Ramblas, Masnou",       zone:"Maresme", off:315, best:"ESE", m:[41.465,2.33], w:[41.478,2.318], cam:{u:"https://www.maresmewaves.com/webcam-barcelona/", n:"Maresme Waves"}},
   {id:"montgat",  name:"Magic, Montgat",         zone:"Maresme", off:315, best:"SE",  m:[41.455,2.29], w:[41.466,2.281]},
   {id:"santmarti",name:"Paradise, Sant Martí", zone:"Empordà", off:247, best:"E", m:[42.13,3.14], w:[42.134,3.123], cam:{u:"https://windsurfpals.net/webcam-club-de-vela-windsurf-pals/", n:"Club de Vela Windsurf Pals", label:"Pals"}},
+  {id:"pals",     name:"Pals", zone:"Empordà", off:270, best:"E", m:[41.975,3.215], w:[41.975,3.195], cam:{u:"https://windsurfpals.net/webcam-club-de-vela-windsurf-pals/", n:"Club de Vela Windsurf Pals"}},
 ];
 const WAVE_MODELS = [{k:"ecmwf_wam",n:"ECMWF WAM 9 km",o:"Centro Europeo de Previsión (ECMWF), 9 km, hora a hora"},{k:"meteofrance_wave",n:"MFWAM",o:"Météo-France, 8 km"},{k:"ncep_gfswave016",n:"GFS-Wave 0,16°",o:"NOAA, EE. UU., 16 km"},{k:"dwd_ewam",n:"EWAM",o:"Servicio meteorológico alemán (DWD), Europa, 5 km"},{k:"dwd_gwam",n:"GWAM",o:"Servicio meteorológico alemán (DWD), global, 25 km"}];
 const WX_MODELS = [{k:"ecmwf_ifs",n:"ECMWF IFS 9 km",o:"Centro Europeo de Previsión, 9 km, hora a hora"},{k:"gfs_seamless",n:"GFS",o:"NOAA, EE. UU."},{k:"icon_seamless",n:"ICON",o:"Servicio meteorológico alemán (DWD)"},{k:"meteofrance_seamless",n:"ARPEGE/AROME",o:"Météo-France"}];
@@ -780,7 +781,7 @@ const WEATHER_URL = "https://api.open-meteo.com/v1/forecast?latitude="+SPOTS.map
 
 const BUOYS = [
   {id:"1731", n:"Barcelona II", z:"Boya costera frente a Barcelona · para el Maresme", spots:["vilassar","premia","cabrera","mataro","balis","arenys","masnou","montgat"]},
-  {id:"2798", n:"Cabo Begur", z:"Boya de mar abierto · para Sant Martí d'Empúries", spots:["santmarti"]},
+  {id:"2798", n:"Cabo Begur", z:"Boya de mar abierto · para Sant Martí d'Empúries y Pals", spots:["santmarti","pals"]},
 ];
 const buoyUrl = id => { const t=new Date(Date.now()-12*3600e3).toISOString(); return `https://poem.puertos.es/portus/StationData?code=${id}&params=Hm0,Tp,Tm02,MeanDir,WaterTemp&from=${t.slice(0,4)}${t.slice(5,7)}${t.slice(8,10)}@${t.slice(11,13)}00`; };
 function parseBuoy(arr){
@@ -1469,7 +1470,7 @@ async function register(e){
   try{
     const fd=new URLSearchParams(); fd.append("EMAIL",email); fd.append("NOMBRE",name);
     ids.forEach(id=>{ const s=SPOTS.find(x=>x.id===id); if(s) fd.append("SPOTS_SWELL_RADAR[]", s.name); });
-    const TOPN={montgat:1,masnou:2,balis:3,mataro:4,cabrera:5,premia:6,santmarti:7,vilassar:8,arenys:9}; if(TOPN[top]) fd.append("TOP_SPOT_SWELL_RADAR", String(TOPN[top]));
+    const TOPN={montgat:1,masnou:2,balis:3,mataro:4,cabrera:5,premia:6,santmarti:7,vilassar:8,arenys:9,pals:10}; if(TOPN[top]) fd.append("TOP_SPOT_SWELL_RADAR", String(TOPN[top]));
     fd.append("OPT_IN","1"); fd.append("email_address_check",""); fd.append("locale","es");
     await fetch(BREVO_FORM, {method:"POST", mode:"no-cors", body:fd});
   }catch(err){ /* sin conexión: se guarda igual en el móvil */ }

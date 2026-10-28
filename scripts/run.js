@@ -86,12 +86,12 @@ ${x.spots.length > 1 ? `<p style="margin:2px 0 0;color:#3d6470">También con fue
   if (TEST_EMAIL) { // prueba: todos los spots, sin tocar el registro de avisos
     let days = fires(SPOTS.map(s => s.id));
     if (!days.length) days = [{ dia: now.slice(0, 10), fuegos: 1, mejor: { spot: '(ejemplo, hoy no hay fuegos)', hora: '--:--', h: 0, p: 0, e: 0 }, spots: [] }];
-    await send(TEST_EMAIL, 'prueba', days, true); console.log('Prueba enviada a ' + TEST_EMAIL); return;
+    try { await send(TEST_EMAIL, 'prueba', days, true); console.log('Prueba enviada a ' + TEST_EMAIL); } catch (e) { console.log('ERROR enviando la prueba: ' + e.message); process.exitCode = 1; } return;
   }
 
   let state = {}; try { state = JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch (e) {}
   const today = now.slice(0, 10); for (const k of Object.keys(state)) if (k.slice(0, 10) < today) delete state[k];
-  const contacts = []; for (let off = 0; ; off += 500) { const r = await brevo('GET', `/contacts/lists/${LIST_ID}/contacts?limit=500&offset=${off}`); contacts.push(...(r.contacts || [])); if (!r.contacts || r.contacts.length < 500) break; }
+  const contacts = []; try { for (let off = 0; ; off += 500) { const r = await brevo('GET', `/contacts/lists/${LIST_ID}/contacts?limit=500&offset=${off}`); contacts.push(...(r.contacts || [])); if (!r.contacts || r.contacts.length < 500) break; } } catch (e) { console.log('ERROR leyendo la lista de Brevo: ' + e.message); process.exitCode = 1; return; }
   let sent = 0;
   for (const c of contacts) {
     if (c.emailBlacklisted) continue;
