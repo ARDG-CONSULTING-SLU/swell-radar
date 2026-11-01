@@ -671,7 +671,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
   </div>
 </div>
 
-<nav class="jump" id="jump" aria-label="Ir a"><div class="jump-in"><a href="#verdict">Hoy</a><a href="#hhSec">Hora a hora</a><a href="#weekSec">7 días</a><a href="#mapSec" data-j="map">Mapas<span class="jl"> y boyas</span></a></div></nav>
+<nav class="jump" id="jump" aria-label="Ir a"><div class="jump-in"><a href="#verdict">Hoy</a><a href="#hhSec" data-j="tom">Mañana</a><a href="#hhSec">Hora a hora</a><a href="#weekSec">7 días</a><a href="#mapSec" data-j="map">Mapas<span class="jl"> y boyas</span></a></div></nav>
 <main class="wrap" style="margin-top:22px">
   <div class="msg" id="msg" hidden></div>
 
@@ -1439,7 +1439,7 @@ const renderIso = renderMaps;
 function updateJump(){ const j=$("jump"); if(!j) return; const m=j.querySelector('[data-j="map"]'), b=j.querySelector('[data-j="buoy"]'); if(m) m.hidden=$("mapSec").hidden; }
 function setJumpOffset(){ const tb=document.querySelector(".topbar"); const sticky=tb && getComputedStyle(tb).position==="sticky"; document.documentElement.style.setProperty("--tbh", (sticky?tb.offsetHeight:0)+"px"); }
 setJumpOffset(); window.addEventListener("resize", setJumpOffset);
-$("jump").addEventListener("click",e=>{ const a=e.target.closest("a"); if(!a) return; e.preventDefault(); const t=document.querySelector(a.getAttribute("href")); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); });
+$("jump").addEventListener("click",e=>{ const a=e.target.closest("a"); if(!a) return; e.preventDefault(); if(a.dataset.j==="tom" && state.data){ state.hhDay=1; state.hhPicked=true; renderHH(); } const t=document.querySelector(a.getAttribute("href")); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); });
 function openDetail(){ const o=$("detailOv"); o.hidden=false; o.scrollTop=0; document.body.style.overflow="hidden"; }
 function closeDetail(){ $("detailOv").hidden=true; document.body.style.overflow=""; }
 $("detailClose").addEventListener("click", closeDetail);
