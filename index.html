@@ -631,7 +631,8 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
     <section class="set-sec set-mail"><h3>📧 Alertas por email</h3><div id="alertSum" class="set-sum"></div><button class="srcbtn reg-go" id="cfgBtn" type="button">Cambiar alertas, nombre o email</button><small>Aquí también puedes darte de baja.</small></section>
     <section class="set-sec"><h3>📱 Lo que ves en la app</h3><small>Solo en este móvil. No cambia tus alertas por email.</small></section>
     <div class="mine-two"><label class="mine-row"><input type="checkbox" id="mineMaps"><span><b>Ver mapas</b><small>Isobaras y tiempo</small></span></label>
-    <label class="mine-row"><input type="checkbox" id="mineBuoys"><span><b>Ver boyas</b><small>Ola medida en directo</small></span></label></div>
+    <label class="mine-row"><input type="checkbox" id="mineBuoys"><span><b>Ver boyas</b><small>Ola medida en directo</small></span></label>
+    <label class="mine-row"><input type="checkbox" id="mineCams"><span><b>Ver cámaras</b><small>Lista de arriba con todas</small></span></label></div>
     <div class="mine-list" id="mineList"></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="srcbtn" id="mineAll" type="button">Mostrar todos</button><span id="mineMsg" style="color:var(--coral);font-size:13px;font-weight:600"></span></div>
   </div>
@@ -1477,7 +1478,7 @@ function renderBuoys0(){
   }).join("");
   $("buoys").innerHTML=cards; $("buoySec").hidden=!cards;
 }
-function renderCams(){ const c=VIS().filter(s=>s.cam).concat(EXTRA_CAMS); $("cams").innerHTML = c.length ? `<span class="eyebrow">Cámaras en directo</span>` + c.map(s=>`<a class="camlink" href="${s.cam.u}" target="_blank" rel="noopener">📷 ${s.cam.label||s.name} <small>${s.cam.n}</small></a>`).join("") : ""; }
+function renderCams(){ if(showCams===false){ $("cams").innerHTML=""; $("cams").hidden=true; return; } $("cams").hidden=false; const c=VIS().filter(s=>s.cam).concat(EXTRA_CAMS); $("cams").innerHTML = c.length ? `<span class="eyebrow">Cámaras en directo</span>` + c.map(s=>`<a class="camlink" href="${s.cam.u}" target="_blank" rel="noopener">📷 ${s.cam.label||s.name} <small>${s.cam.n}</small></a>`).join("") : ""; }
 const WARRIORS = ["Choco","Eloi","Fer","Ignasi","Joan","Lauren","Nuria","Oli","Pepo","Xavi","Andoni"];
 const WHO_KEY = "swr-who-maresme";
 let who = null; try { who = localStorage.getItem(WHO_KEY); if(who==="Eloy"){ who="Eloi"; localStorage.setItem(WHO_KEY, who); } } catch(e) {}
@@ -1592,6 +1593,8 @@ function renderHello(){
 }
 const HIDE_KEY = "swr-hidden-maresme";
 const BUOY_KEY = "swr-buoys-maresme";
+const CAMS_KEY = "swr-cams-top";
+var showCams = true; try { showCams = localStorage.getItem(CAMS_KEY)!=="0"; } catch(e) {}
 let showBuoys = true; try { showBuoys = localStorage.getItem(BUOY_KEY)!=="0"; } catch(e) {}
 let showIso = true, showWx = true; try { showIso = localStorage.getItem(BUOY_KEY+"-iso")!=="0"; showWx = localStorage.getItem(BUOY_KEY+"-wx")!=="0"; } catch(e) {}
 let hidden = new Set();
@@ -1617,6 +1620,8 @@ function renderMine(){
   $("mineCount").textContent=`${VIS().length}/${SPOTS.length}`;
   const bb=$("mineBuoys"); bb.checked=showBuoys;
   bb.onchange=()=>{ showBuoys=bb.checked; try { localStorage.setItem(BUOY_KEY, showBuoys?"1":"0"); } catch(e) {} renderBuoys(); };
+  const bc=$("mineCams"); bc.checked=showCams;
+  bc.onchange=()=>{ showCams=bc.checked; try { localStorage.setItem(CAMS_KEY, showCams?"1":"0"); } catch(e) {} renderCams(); };
   const bm=$("mineMaps"); bm.checked=showIso||showWx;
   bm.onchange=()=>{ showIso=showWx=bm.checked; try { localStorage.setItem(BUOY_KEY+"-iso", bm.checked?"1":"0"); localStorage.setItem(BUOY_KEY+"-wx", bm.checked?"1":"0"); } catch(e) {} renderMaps(); };
 }
