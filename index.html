@@ -1290,7 +1290,7 @@ function renderHH(){ renderWvLegend();
   const inWin = i => { const hr=parseInt(ts[i].slice(11,13)); return hr>=8 && hr<=20; };
   const todayLeft = days[0].idx.filter(i=>i>=ni && inWin(i));
   if(state.hhDay===0 && !todayLeft.length && !state.hhPicked && days[1]){ state.hhDay=1; }
-  tabs.innerHTML = days.map((dy,k)=>{const l=dayLabel(dy.date,k);return `<button class="tab" type="button" data-hh="${k}" aria-pressed="${state.hhDay===k}">${l.a} ${l.b}</button>`}).join("");
+  tabs.innerHTML = days.map((dy,k)=>{const l=dayLabel(dy.date,k);return `<button class="tab" type="button" data-hh="${k}" aria-pressed="${state.hhDay===k}">${k<2?l.a:l.a+" "+l.b}</button>`}).join("");
   tabs.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{ state.hhDay=+b.dataset.hh; state.hhPicked=true; renderHH(); }));
   const dy=days[state.hhDay];
   const idx = state.hhDay===0 ? todayLeft : dy.idx.filter(inWin);
