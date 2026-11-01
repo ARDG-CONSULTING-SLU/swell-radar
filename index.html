@@ -599,6 +599,18 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
   </button>
 </div></div>
 
+<div class="overlay" id="waPanel" style="z-index:31" role="dialog" aria-modal="true" aria-labelledby="waTitle" hidden>
+  <div class="panel" style="max-width:480px">
+    <div class="panel-h"><div><h2 id="waTitle">Conecta tu grupo de WhatsApp</h2><p>Solo una vez en este móvil. Después, el botón verde te abrirá ese grupo directamente.</p></div>
+      <button class="xbtn" id="waClose" type="button" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <ol style="margin:0;padding-left:20px;font-size:14px;line-height:1.5;color:var(--fg2)"><li>Abre el grupo en WhatsApp y toca su nombre arriba.</li><li>Entra en <b>Invitar al grupo mediante enlace</b> y copia el enlace.</li><li>Pégalo aquí abajo.</li></ol>
+    <form id="waForm" class="reg" novalidate>
+      <label class="reg-f"><span>Enlace del grupo</span><input id="waInput" type="url" inputmode="url" autocomplete="off" placeholder="https://chat.whatsapp.com/..."></label>
+      <div class="reg-msg" id="waMsg" role="alert"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="srcbtn reg-go" type="submit">Guardar y abrir</button><button class="reg-skip" id="waDel" type="button" hidden>Quitar grupo</button></div>
+    </form>
+  </div>
+</div>
 <div class="overlay" id="whoPanel" role="dialog" aria-modal="true" aria-labelledby="whoTitle" hidden>
   <div class="panel" style="max-width:560px">
     <div class="panel-h"><div><div class="eyebrow">Swell Radar</div><h2 id="whoTitle">Regístrate</h2><p id="whoSub">Solo la primera vez en este móvil. Con tu email te enviamos un resumen a las 7:00 los días que haya 🔥 en tus spots.</p></div></div>
@@ -629,6 +641,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
       <button class="xbtn" id="mineClose" type="button" aria-label="Cerrar ajustes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <section class="set-sec set-mail"><h3>📧 Alertas por email</h3><div id="alertSum" class="set-sum"></div><button class="srcbtn reg-go" id="cfgBtn" type="button">Cambiar alertas, nombre o email</button><small>Aquí también puedes darte de baja.</small></section>
+    <section class="set-sec"><h3>💬 Grupo de WhatsApp</h3><div id="waSum" class="set-sum"></div><button class="srcbtn" id="waCfg" type="button">Conectar grupo</button><small>Solo en este móvil. Es el grupo que abre el botón verde.</small></section>
     <section class="set-sec"><h3>📱 Lo que ves en la app</h3><small>Solo en este móvil. No cambia tus alertas por email.</small></section>
     <div class="mine-two"><label class="mine-row"><input type="checkbox" id="mineMaps"><span><b>Ver mapas</b><small>Isobaras y tiempo</small></span></label>
     <label class="mine-row"><input type="checkbox" id="mineBuoys"><span><b>Ver boyas</b><small>Ola medida en directo</small></span></label>
@@ -1723,6 +1736,23 @@ function renderAlertSum(){ let r={}; try{ r=JSON.parse(localStorage.getItem(REG_
     : (!r.ok || !(r.spots||[]).length) ? `Alertas <b>pausadas</b> para ${esc(r.email)}.`
     : `Un email al día, a las 7:00, a <b>${esc(r.email)}</b> si hay 🔥 en: ${(r.spots||[]).map(id=>esc(nm(id))).join(", ")}.${r.top?`<br>Top spot: <b>${esc(nm(r.top))}</b>`:""}`;
   $("cfgBtn").textContent = r.email ? "Cambiar alertas, nombre o email" : "Registrarme para recibir alertas"; }
+// Botón de WhatsApp: abre el grupo que cada persona conecta (enlace de invitación, guardado en este móvil)
+const WA_KEY="swr-wa-group";
+function waGet(){ try{ return localStorage.getItem(WA_KEY)||""; }catch(e){ return ""; } }
+function waNorm(v){ const m=String(v||"").trim().match(/(?:https?:\/\/)?chat\.whatsapp\.com\/(?:invite\/)?([A-Za-z0-9]{10,40})/); return m ? "https://chat.whatsapp.com/"+m[1] : ""; }
+function waSum(){ const g=waGet(); $("waSum").textContent = g ? "Conectado: "+g : "Todavía no has conectado ningún grupo."; $("waCfg").textContent = g ? "Cambiar grupo" : "Conectar grupo"; }
+function waOpen(){ const g=waGet(); $("waInput").value=g; $("waMsg").textContent=""; $("waDel").hidden=!g; $("waPanel").hidden=false; setTimeout(()=>$("waInput").focus(),50); }
+function waClose(){ $("waPanel").hidden=true; }
+document.addEventListener("click",e=>{ if(!e.target.closest("#waFab")) return; const g=waGet(); if(g){ e.preventDefault(); window.open(g,"_blank","noopener"); return; } e.preventDefault(); waOpen(); });
+$("waClose").addEventListener("click",waClose);
+$("waPanel").addEventListener("click",e=>{ if(e.target===$("waPanel")) waClose(); });
+$("waForm").addEventListener("submit",e=>{ e.preventDefault(); const g=waNorm($("waInput").value);
+  if(!g){ $("waMsg").textContent="Ese enlace no es de un grupo de WhatsApp. Tiene que empezar por https://chat.whatsapp.com/"; return; }
+  try{ localStorage.setItem(WA_KEY,g); }catch(err){}
+  waSum(); waClose(); window.open(g,"_blank","noopener"); });
+$("waDel").addEventListener("click",()=>{ try{ localStorage.removeItem(WA_KEY); }catch(e){} waSum(); waClose(); });
+$("waCfg").addEventListener("click",()=>{ waOpen(); });
+waSum();
 $("mineBtn").addEventListener("click", ()=>{ renderAlertSum(); renderMine(); mineLastFocus=document.activeElement; $("minePanel").hidden=false; $("mineClose").focus(); });
 $("mineClose").addEventListener("click", closeMine);
 $("minePanel").addEventListener("click", e=>{ if(e.target.id==="minePanel") closeMine(); });
@@ -1771,5 +1801,5 @@ render();
 </script>
 
 <div style="height:72px" aria-hidden="true"></div>
-<a class="wa-fab" href="https://wa.me/?text=https%3A%2F%2Fardg-consulting-slu.github.io%2Fswell-radar%2F" target="_blank" rel="noopener" aria-label="Enviar Swell Radar por WhatsApp" title="Enviar por WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 7L3 29l6.4-2c2 1.1 4.3 1.7 6.6 1.7 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.4c-2.1 0-4.1-.6-5.9-1.7l-.4-.3-3.8 1.2 1.2-3.7-.3-.4c-1.2-1.8-1.8-3.8-1.8-5.9C5 9.9 9.9 5.1 16 5.1s11 4.8 11 10.7-4.9 10.6-11 10.6zm6-8c-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.7-1.7-1-.9-1.7-2-1.9-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2 0-.4 0-.6l-1.1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.5c.2.2 2.4 3.6 5.8 5 2.8 1.1 3.4.9 4 .8.6-.1 2-.8 2.3-1.6.3-.8.3-1.4.2-1.6-.1-.1-.3-.2-.6-.4z"/></svg></a>
+<a class="wa-fab" id="waFab" href="#" aria-label="Abrir el grupo de WhatsApp" title="Grupo de WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 7L3 29l6.4-2c2 1.1 4.3 1.7 6.6 1.7 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.4c-2.1 0-4.1-.6-5.9-1.7l-.4-.3-3.8 1.2 1.2-3.7-.3-.4c-1.2-1.8-1.8-3.8-1.8-5.9C5 9.9 9.9 5.1 16 5.1s11 4.8 11 10.7-4.9 10.6-11 10.6zm6-8c-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.7-1.7-1-.9-1.7-2-1.9-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2 0-.4 0-.6l-1.1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.5c.2.2 2.4 3.6 5.8 5 2.8 1.1 3.4.9 4 .8.6-.1 2-.8 2.3-1.6.3-.8.3-1.4.2-1.6-.1-.1-.3-.2-.6-.4z"/></svg></a>
 </body></html>
