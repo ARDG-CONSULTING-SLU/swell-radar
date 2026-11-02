@@ -193,6 +193,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--aqua);outl
 .win p{margin:0;font-size:15px;font-weight:600;max-width:46ch}
 .win .stats{display:flex;flex-wrap:wrap;gap:8px}
 .win .stats span{background:color-mix(in srgb,var(--coral-ink) 14%,transparent);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700}
+.win .stats .envst{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;font-size:12px;padding:5px 9px;max-width:100%}.win .stats .envst svg{flex:none}
 .alert3{position:relative;z-index:1;display:flex;flex-direction:column;gap:3px;background:#2a0d06;color:#fff;border-radius:14px;padding:11px 14px;font-size:14px;font-weight:600;box-shadow:0 0 0 2px #ff6b4a}
 .alert3 b{font-family:var(--display);font-weight:800;font-size:16px}
 .alert3.off{background:color-mix(in srgb,currentColor 10%,transparent);color:inherit;box-shadow:none;font-size:13px;opacity:.85}
@@ -1193,7 +1194,7 @@ function renderVerdict(){
     <div class="win lv${top.lv}">
       <div class="mood"><span class="emo ${mood.e==="🔥"?(mood.big===3?"fire-max fire-3":mood.big?"fire-max":"fire-small"):""}" aria-hidden="true">${mood.big===3?"🔥🔥🔥":mood.big===2?"🔥🔥":mood.e}</span><div><span class="eyebrow">Hoy</span><h2>${mood.t}</h2><p style="margin-top:4px">${mood.sub}</p></div></div>
       <span class="eyebrow" style="margin-top:6px">Mejor spot ahora: ${head}</span>
-      <div class="stats"><span>${fmt(top.h)} m</span><span>${fmt(top.p,1)} s</span><span>${swell(d.spots[top.s.id].m.d[ni],top.s,13)}</span><span>${fmt(power(top.h,top.p),1)} kJ</span><span>Viento ${fmt(top.ws,0)} km/h ${windRel(top.s,top.wd,top.ws,top.wg).toLowerCase()}</span>${(o=>o?`<span>💧 Agua ${fmt(o.wt,0)}° · 🌡️ térmica ${fmt(o.th,0)}° · ${suitIco(o.S,18)} ${o.suit}</span>`:"")(thermo(top.s.id,d.spots[top.s.id],ts,ni))}</div>
+      <div class="stats"><span>${fmt(top.h)} m</span><span>${fmt(top.p,1)} s</span><span>${swell(d.spots[top.s.id].m.d[ni],top.s,13)}</span><span>${fmt(power(top.h,top.p),1)} kJ</span><span>Viento ${fmt(top.ws,0)} km/h ${windRel(top.s,top.wd,top.ws,top.wg).toLowerCase()}</span>${(o=>o?`<span class="envst" title="Agua ${fmt(o.wt,0)}° · térmica ${fmt(o.th,0)}° · ${o.suit}">💧 Agua ${fmt(o.wt,0)}° · 🌡️ Térmica ${fmt(o.th,0)}° · ${suitIco(o.S,16)}${o.S.m||o.S.t}</span>`:"")(thermo(top.s.id,d.spots[top.s.id],ts,ni))}</div>
       ${wk ? `<p>Mejor sesión de la semana: ${wk.s.name}, ${wl.a.toLowerCase()} ${wl.b} a las ${hhmm(ts[wk.i])} con ${fmt(wk.h)} m y ${fmt(wk.p,1)} s (${LEVELS[level(wk.h,wk.p)].toLowerCase()}).</p>` : ""}
       <svg class="wave-anim" viewBox="0 0 800 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 ${40-amp} Q50 ${40-amp*2} 100 ${40-amp} T200 ${40-amp} T300 ${40-amp} T400 ${40-amp} T500 ${40-amp} T600 ${40-amp} T700 ${40-amp} T800 ${40-amp} V70 H0Z" fill="currentColor"/></svg>
     </div>`;
