@@ -69,6 +69,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--aqua);outl
 .brand svg{flex:none}
 .brand h1{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;margin:0;line-height:1}
 .brand small{display:block;font-size:12px;color:var(--fg2);font-weight:500;margin-top:3px}
+.sun{font-size:12.5px;color:var(--fg2);margin-top:3px;line-height:1.35}.sun b{color:var(--fg);font-weight:700}
 .status{font-size:12.5px;color:var(--fg2);display:flex;align-items:center;gap:7px;margin-top:5px}
 @media (max-width:640px){
   .topbar{position:relative;top:auto;padding-block:10px}
@@ -587,7 +588,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 <div class="topbar"><div class="top-in">
   <div class="brand">
     <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="10" fill="var(--coral)"/><path d="M5 21c3.5 0 4.5-6 9-6 3.6 0 3.9 4 6.6 4 2 0 2.4-2 2.4-3.4 0-3.3-3-5.6-6.4-5.6 6.6-3 13.4 1.9 13.4 8.8 0 1.2-.2 2.2-.5 3.2H5z" fill="var(--coral-ink)"/></svg>
-    <div><h1>Swell Radar Weekend Warriors</h1><small>10 spots · Maresme y Empordà · 7 días</small><div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">Cargando…</span></div></div>
+    <div><h1>Swell Radar Weekend Warriors</h1><small>10 spots · Maresme y Empordà · 7 días</small><div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">Cargando…</span></div><div class="sun" id="sun"></div></div>
   </div>
   <button class="srcbtn" id="mineBtn" type="button" aria-label="Ajustes" aria-haspopup="dialog" aria-controls="minePanel">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3"/></svg>
@@ -1623,7 +1624,7 @@ function renderMine(){
   $("mineList").querySelectorAll(".topbtn").forEach(b=>b.addEventListener("click",()=>{
     topSpot = topSpot===b.dataset.top ? "" : b.dataset.top;
     try { localStorage.setItem(TOP_KEY, topSpot); } catch(e) {}
-    state.hhSpot = topSpot || null; renderMine(); renderHH();
+    state.hhSpot = topSpot || null; renderMine(); renderHH(); renderSun();
   }));
   $("mineList").querySelectorAll("input").forEach(cb=>cb.addEventListener("change",()=>{
     if(cb.checked) hidden.delete(cb.dataset.id); else hidden.add(cb.dataset.id);
@@ -1638,7 +1639,26 @@ function renderMine(){
   const bm=$("mineMaps"); bm.checked=showIso||showWx;
   bm.onchange=()=>{ showIso=showWx=bm.checked; try { localStorage.setItem(BUOY_KEY+"-iso", bm.checked?"1":"0"); localStorage.setItem(BUOY_KEY+"-wx", bm.checked?"1":"0"); } catch(e) {} renderMaps(); };
 }
-function renderAllButStatus(){ if(hidden.has(state.spot)) state.spot=VIS()[0].id; renderHello(); renderVerdict(); renderBars(); renderNow(); renderBuoys(); renderCams(); renderHH(); renderHeat(); renderIso(); renderTabs(); renderChart(); renderHours(); }
+// Salida y puesta de sol del Top spot (cálculo NOAA, hora de Madrid)
+function sunTimes(date, lat, lon){
+  const rad=Math.PI/180, J=date/86400000+2440587.5, n=Math.round(J-2451545.0009-(-lon)/360);
+  const Js=2451545.0009+(-lon)/360+n, M=(357.5291+0.98560028*(Js-2451545))%360;
+  const C=1.9148*Math.sin(M*rad)+0.02*Math.sin(2*M*rad)+0.0003*Math.sin(3*M*rad), L=(M+102.9372+C+180)%360;
+  const Jt=Js+0.0053*Math.sin(M*rad)-0.0069*Math.sin(2*L*rad), dec=Math.asin(Math.sin(L*rad)*Math.sin(23.4397*rad));
+  const cw=(Math.sin(-0.833*rad)-Math.sin(lat*rad)*Math.sin(dec))/(Math.cos(lat*rad)*Math.cos(dec));
+  if(cw<-1||cw>1) return null; const w=Math.acos(cw)/rad/360, toMs=j=>(j-2440587.5)*86400000;
+  return {rise:new Date(toMs(Jt-w)), set:new Date(toMs(Jt+w))};
+}
+function renderSun(){ const el=$("sun"); if(!el) return;
+  let id=""; try{ id=topVisible(); }catch(e){} id=id||(VIS()[0]&&VIS()[0].id); const sp=SPOTS.find(x=>x.id===id); if(!sp){ el.textContent=""; return; }
+  const [lat,lon]=sp.w||sp.m, now=new Date(); let st=sunTimes(now,lat,lon), lab="Hoy";
+  if(st && now>st.set){ st=sunTimes(new Date(now.getTime()+86400000),lat,lon); lab="Mañana"; }
+  if(!st){ el.textContent=""; return; }
+  const f=d=>d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Madrid"});
+  el.innerHTML=`<span style="white-space:nowrap">Sol ${lab==="Hoy"?"hoy":"mañana"} en <b>${sp.name}</b>:</span> <span style="white-space:nowrap">🌅 ${f(st.rise)} · 🌇 ${f(st.set)}</span>`; el.title="Salida y puesta de sol en "+sp.name;
+}
+setInterval(renderSun,60000);
+function renderAllButStatus(){ if(hidden.has(state.spot)) state.spot=VIS()[0].id; renderHello(); renderSun(); renderVerdict(); renderBars(); renderNow(); renderBuoys(); renderCams(); renderHH(); renderHeat(); renderIso(); renderTabs(); renderChart(); renderHours(); }
 function render(){ renderStatus(); renderAllButStatus(); try{updateJump()}catch(e){} }
 
 function showMsg(text, kind){ const m=$("msg"); if(!text){ m.hidden=true; return; } m.textContent=text; m.dataset.kind=kind||"warn"; m.hidden=false; }
