@@ -69,7 +69,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--aqua);outl
 .brand svg{flex:none}
 .brand h1{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;margin:0;line-height:1}
 .brand small{display:block;font-size:12px;color:var(--fg2);font-weight:500;margin-top:3px}
-.sun{font-size:12.5px;color:var(--fg2);margin-top:3px;line-height:1.35}.sun b{color:var(--fg);font-weight:700}
+.sun{font-size:12.5px;color:var(--fg2);margin-top:3px;line-height:1.5}.sun b{color:var(--fg);font-weight:700}.sun-t{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;margin-right:8px;color:var(--fg);font-weight:700}.sun-ic{flex:none;color:var(--fg2)}
 .status{font-size:12.5px;color:var(--fg2);display:flex;align-items:center;gap:7px;margin-top:5px}
 @media (max-width:640px){
   .topbar{position:relative;top:auto;padding-block:10px}
@@ -1636,13 +1636,15 @@ function sunTimes(date, lat, lon){
   if(cw<-1||cw>1) return null; const w=Math.acos(cw)/rad/360, toMs=j=>(j-2440587.5)*86400000;
   return {rise:new Date(toMs(Jt-w)), set:new Date(toMs(Jt+w))};
 }
+const SUN_ICO=(up)=>`<svg class="sun-ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 18h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 18a5.5 5.5 0 0 1 11 0" fill="#f5a524"/><path d="M12 5.5v5.5M9.4 ${up?"8":"8.4"}l2.6 ${up?"-2.6":"2.6"} 2.6 ${up?"2.6":"-2.6"}" fill="none" stroke="${up?"#e8860c":"#c2410c"}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 function renderSun(){ const el=$("sun"); if(!el) return;
-  let id=""; try{ id=topVisible(); }catch(e){} id=id||(VIS()[0]&&VIS()[0].id); const sp=SPOTS.find(x=>x.id===id); if(!sp){ el.textContent=""; return; }
+  let id="", topId=""; try{ id=topId=topVisible(); }catch(e){} id=id||(VIS()[0]&&VIS()[0].id); const sp=SPOTS.find(x=>x.id===id); if(!sp){ el.textContent=""; return; }
   const [lat,lon]=sp.w||sp.m, now=new Date(); let st=sunTimes(now,lat,lon), lab="Hoy";
   if(st && now>st.set){ st=sunTimes(new Date(now.getTime()+86400000),lat,lon); lab="Mañana"; }
   if(!st){ el.textContent=""; return; }
   const f=d=>d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Madrid"});
-  el.innerHTML=`<span style="white-space:nowrap">Sol ${lab==="Hoy"?"hoy":"mañana"} en <b>${sp.name}</b>:</span> <span style="white-space:nowrap">🌅 ${f(st.rise)} · 🌇 ${f(st.set)}</span>`; el.title="Salida y puesta de sol en "+sp.name;
+  const isTop=!!topId, who=isTop?`tu Top spot, <b>${sp.name}</b>`:`<b>${sp.name}</b>`;
+  el.innerHTML=`<span style="display:block">${lab} en ${who}:</span><span class="sun-t">${SUN_ICO(true)}Sale ${f(st.rise)}</span> <span class="sun-t">${SUN_ICO(false)}Se pone ${f(st.set)}</span>`; el.title="Salida y puesta de sol en "+sp.name;
 }
 setInterval(renderSun,60000);
 function renderAllButStatus(){ if(hidden.has(state.spot)) state.spot=VIS()[0].id; renderHello(); renderSun(); renderVerdict(); renderBars(); renderNow(); renderBuoys(); renderCams(); renderHH(); renderHeat(); renderIso(); renderTabs(); renderChart(); renderHours(); }
