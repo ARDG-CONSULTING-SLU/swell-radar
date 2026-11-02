@@ -673,7 +673,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
     </div>
     <div class="src-sec">
       <h3>Cálculos propios de la app</h3>
-      <div class="src"><span><b>Energía (kJ)</b> = energía de una ola por metro de frente ≈ 0,98 × altura² × periodo². Sube mucho con el periodo: misma altura con más periodo empuja bastante más. No es idéntica a la de Surf-Forecast, que no publica su fórmula.</span><span><b>Sensación térmica</b> = media entre la temperatura del agua y la sensación térmica fuera del agua (temperatura con el efecto del viento). <b>Traje</b>, según la temperatura del agua: más de 24° bañador · 21–24° shorty (sin mangas, hasta la rodilla) · 17–20° neopreno 3/2 · 12–16° neopreno 4/3 · 8–11° neopreno 5/4.</span><span><b>Viento offshore/onshore</b>: dirección del viento comparada con la orientación offshore de cada spot.</span><span><b>Nivel</b>: plato (menos de 0,3 m) · pequeño (no llega al mínimo) · <b>surfeable desde 0,5 m y 6 s</b> (periodo de pico) (🔥 desde 0,6 m y 6 s) · bueno desde 1 m y 6 s (🔥🔥) · grande desde 1,5 m y 6 s (🔥🔥🔥).</span><span><b>Mejor spot</b>: potencia de la ola ajustada por el viento (glassy y offshore suman, onshore resta).</span><span><b>Glassy</b>: viento medio por debajo de 6 km/h y rachas por debajo de 12 km/h; mar liso, las mejores condiciones.</span><span><b>Acuerdo entre modelos</b>: alto si los modelos dan alturas parecidas, bajo si discrepan mucho.</span></div>
+      <div class="src"><span><b>Energía (kJ)</b> = energía de una ola por metro de frente ≈ 0,98 × altura² × periodo². Sube mucho con el periodo: misma altura con más periodo empuja bastante más. No es idéntica a la de Surf-Forecast, que no publica su fórmula.</span><span><b>Sensación térmica</b> = media entre la temperatura del agua y la sensación térmica fuera del agua (temperatura con el efecto del viento). <b>Traje</b>, según la sensación térmica (agua y frío de fuera, no solo el agua): más de 24° bañador · 21–24° shorty (sin mangas, hasta la rodilla) · 17–20° neopreno 3/2 · 12–16° neopreno 4/3 · menos de 12° neopreno 5/4.</span><span><b>Viento offshore/onshore</b>: dirección del viento comparada con la orientación offshore de cada spot.</span><span><b>Nivel</b>: plato (menos de 0,3 m) · pequeño (no llega al mínimo) · <b>surfeable desde 0,5 m y 6 s</b> (periodo de pico) (🔥 desde 0,6 m y 6 s) · bueno desde 1 m y 6 s (🔥🔥) · grande desde 1,5 m y 6 s (🔥🔥🔥).</span><span><b>Mejor spot</b>: potencia de la ola ajustada por el viento (glassy y offshore suman, onshore resta).</span><span><b>Glassy</b>: viento medio por debajo de 6 km/h y rachas por debajo de 12 km/h; mar liso, las mejores condiciones.</span><span><b>Acuerdo entre modelos</b>: alto si los modelos dan alturas parecidas, bajo si discrepan mucho.</span></div>
     </div>
     <div class="src-note">Surf-Forecast, Windguru, Windy y Wisuki no se consultan en vivo: no permiten leer sus previsiones desde la app. Surf-Forecast se usa solo para la orientación de los spots.</div>
   </div>
@@ -949,7 +949,7 @@ function swell(from, spot, s=14, withName=true){ if(from==null) return "";
 /* ---- sensación térmica del surfista: media entre el agua y la sensación fuera del agua (temperatura con viento) ---- */
 function thermo(id,x,ts,i){ if(!x) return null; const wt=waterAt(id,ts,i), at=x.w.at&&x.w.at[i]!=null?x.w.at[i]:x.w.t[i];
   if(wt==null) return null; const th=at==null?wt:(wt+at)/2;
-  const S=suitFor(wt), suit=S.t;
+  const S=suitFor(th), suit=S.t;
   return {wt,at,th,suit,S}; }
 const thermoChip = o => !o ? "" : `<span class="thc" title="Agua ${fmt(o.wt,1)}° · sensación fuera ${fmt(o.at,0)}° · térmica = media de las dos · ${o.suit}"><span class="nw">🌡️ térmica ${fmt(o.th,0)}°</span><span class="nw">${suitIco(o.S,18)} ${o.suit}</span></span>`;
 
@@ -1068,16 +1068,18 @@ function waveIcon(h,sz=24){ const k=waveSize(h); if(!k) return "";
           : k===2 ? `<path d="M2 19c3 0 4-7 9-7 3 0 4.2 2.6 2.6 3.8"/><path d="M13.6 15.8c2.4.3 4 2.4 8.4 3.2"/><path d="M2 21.5h20" opacity=".45"/>`
           : `<path d="M2 20c2 0 3-14 11-15 4.5-.5 7 3 5 5.5-1.5 1.8-4 1-3.6-1.2"/><path d="M14.4 9.3c2 2.8 3.5 8.2 7.6 10.7"/><path d="M2 22h20" opacity=".45"/>`;
   return `<svg class="wv-ic wv${k}" width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="${WAVE_NAMES[k]}"><title>${WAVE_NAMES[k]}</title>${p}</svg>`; }
-// Traje según la temperatura del agua (tabla de Andoni)
+// Traje según la térmica = media del agua y la sensación fuera del agua (tabla de Andoni)
 function suitFor(w){ const t=Math.round(w);
   return t>24?{k:"b",t:"bañador"}: t>=21?{k:"s",t:"shorty"}: t>=17?{k:"f",t:"neopreno 3/2",m:"3/2"}: t>=12?{k:"f",t:"neopreno 4/3",m:"4/3"}:{k:"f",t:"neopreno 5/4",m:"5/4"}; }
 function suitIco(S, z){ z=z||20; const st=`class="suit-ic" width="${z}" height="${z}" viewBox="0 0 24 24" aria-hidden="true"`;
   if(S.k==="b") return `<svg ${st}><path d="M4 6h16l-1.2 11h-5.3L12 11.5 10.5 17H5.2z" fill="currentColor"/><path d="M4 8.2h16" stroke="var(--card)" stroke-width="1.2"/></svg>`;
   if(S.k==="s") return `<svg ${st}><path d="M8.6 2.5h2.3c.3 1.1 1.1 1.7 1.1 1.7s.8-.6 1.1-1.7h2.3l.9 4.2-.7 4.3 1.2 6.5h-4L12 13.6l-.8 3.7h-4l1.2-6.5-.7-4.3z" fill="currentColor"/></svg>`;
   return `<svg ${st}><path d="M9 2.5h6l3.6 3 1.2 8.5h-2l-1.3-6-.4 6 .7 8.5h-3l-.8-8-.8 8h-3l.7-8.5-.4-6-1.3 6h-2l1.2-8.5z" fill="currentColor"/></svg>`; }
-const suitTag = w => { if(w==null) return ""; const S=suitFor(w); return `<span class="suit" title="Traje para agua a ${fmt(w,0)}°">${suitIco(S,18)}${S.m||S.t}</span>`; };
+function airAt(id,i){ const x=state.data&&state.data.spots[id]; if(!x) return null; return x.w.at&&x.w.at[i]!=null?x.w.at[i]:(x.w.t?x.w.t[i]:null); }
+function thermAt(id,ts,i){ const wt=waterAt(id,ts,i); if(wt==null) return null; const at=airAt(id,i); return at==null?wt:(wt+at)/2; }
+const suitTag = (w, at) => { if(w==null) return ""; const th=at==null?w:(w+at)/2, S=suitFor(th); return `<span class="suit" title="Traje según la térmica ${fmt(th,0)}° (agua ${fmt(w,0)}° y sensación fuera ${at==null?"—":fmt(at,0)+"°"})">${suitIco(S,18)}${S.m||S.t}</span>`; };
 function waterAt(id, ts, i){ const d=state.data, S=d&&d.sst; if(!S||!S.v[id]) return null; const k=Math.round((Date.parse(ts[i]+"Z")-Date.parse(S.t0+"Z"))/3600e3); const a=S.v[id]; return k>=0&&k<a.length?a[k]:null; }
-const waterTag = (id, ts, i) => { const w=waterAt(id,ts,i); return w==null?"":`<span class="water" title="Temperatura del agua">💧 agua ${fmt(w,0)}°</span>${suitTag(w)}`; };
+const waterTag = (id, ts, i) => { const w=waterAt(id,ts,i); return w==null?"":`<span class="water" title="Temperatura del agua">💧 agua ${fmt(w,0)}°</span>${suitTag(w, airAt(id,i))}`; };
 const fireTag = (h,p) => { const t=fireTier(h,p); return t===3?`<span class="fire max" title="Fuego máximo: 1,5 m y 6 s o más">🔥🔥🔥</span>`:t===2?`<span class="fire max" title="Doble fuego: 1 m y 6 s o más">🔥🔥</span>`:t===1?`<span class="fire" title="Fuego: 0,6 m y 6 s o más">🔥</span>`:""; };
 function wcls(rel){ return rel==="Glassy"?"wg":(rel==="Offshore"||rel==="Cross-off")?"wo":rel==="Cross"?"wc":"wb"; }
 function renderBars(){
@@ -1587,7 +1589,7 @@ function renderHello(){
       line = lv>=2 ? `${lab} el mejor sitio y la mejor hora para surfear: <b>${at}</b>, ${fmt(best.h)} m y ${fmt(best.p,1)} s${best.g?", glassy":""}.`
            : best.h<0.3 ? `${lab} está plato. Lo que más mueve: ${at}, ${fmt(best.h)} m.`
            : `${lab} no llega al mínimo para surfear (0,5 m y 6 s). Lo que más mueve: ${at}, ${fmt(best.h)} m y ${fmt(best.p,1)} s.`;
-      const wt=waterAt(best.s.id,ts,best.i); if(wt!=null){ const S=suitFor(wt); line+=` <span class="suit-day">${suitIco(S,22)} Traje ${lab.toLowerCase()}: <b>${S.t}</b> (agua ${fmt(wt,0)}°)</span>`; } }
+      const wt=waterAt(best.s.id,ts,best.i); if(wt!=null){ const th=thermAt(best.s.id,ts,best.i), S=suitFor(th); line+=` <span class="suit-day">${suitIco(S,22)} Traje ${lab.toLowerCase()}: <b>${S.t}</b> (agua ${fmt(wt,0)}°, térmica ${fmt(th,0)}°)</span>`; } }
   }
   box.innerHTML = `<h2>Hola, <span>${esc(who)}</span></h2>${line?`<p>${line}</p>`:""}<button type="button" id="notMe">Mis alertas</button>${isStandalone()?"":'<button type="button" class="instbtn" id="instBtn">📲 Instalar en el móvil</button>'}`;
   $("notMe").addEventListener("click", ()=>openWho());
