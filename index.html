@@ -154,6 +154,13 @@ button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--aqua);outl
 .sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .sec-h h2{font-family:var(--display);font-weight:700;font-size:17px;margin:0;letter-spacing:-.01em;text-wrap:balance}
 .sec-h p{margin:0;font-size:12.5px;color:var(--fg3)}
+.sec-h .ctog{margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:4px;border:0;border-radius:999px;padding:5px 11px;font:700 12.5px/1 inherit;font-family:inherit;background:color-mix(in srgb,var(--fg) 8%,transparent);color:var(--fg);cursor:pointer}
+.sec-h .ctog svg{transition:transform .2s}
+.coll > .sec-h .ctog svg{transform:rotate(-90deg)}
+.coll > .cbody{display:none}
+.coll > .sec-h p{display:none}
+.coll > .sec-h{margin-bottom:0}
+.sec-h h2.ch{cursor:pointer}
 .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg3);font-weight:600}
 
 /* now cards */
@@ -674,7 +681,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
     </div>
     <div class="src-sec">
       <h3>Cálculos propios de la app</h3>
-      <div class="src"><span><b>Energía (kJ)</b> = energía de una ola por metro de frente ≈ 0,98 × altura² × periodo². Sube mucho con el periodo: misma altura con más periodo empuja bastante más. No es idéntica a la de Surf-Forecast, que no publica su fórmula.</span><span><b>Sensación térmica</b> = media entre la temperatura del agua y la sensación térmica fuera del agua (temperatura con el efecto del viento). <b>Traje</b>, según la sensación térmica (agua y frío de fuera, no solo el agua): más de 24° bañador · 21–24° shorty (sin mangas, hasta la rodilla) · 17–20° neopreno 3/2 · 12–16° neopreno 4/3 · menos de 12° neopreno 5/4.</span><span><b>Viento offshore/onshore</b>: dirección del viento comparada con la orientación offshore de cada spot.</span><span><b>Nivel</b>: plato (menos de 0,3 m) · pequeño (no llega al mínimo) · <b>surfeable desde 0,5 m y 6 s</b> (periodo de pico) (🔥 desde 0,6 m y 6 s) · bueno desde 1 m y 6 s (🔥🔥) · grande desde 1,5 m y 6 s (🔥🔥🔥).</span><span><b>Mejor spot</b>: potencia de la ola ajustada por el viento (glassy y offshore suman, onshore resta).</span><span><b>Glassy</b>: viento medio por debajo de 6 km/h y rachas por debajo de 12 km/h; mar liso, las mejores condiciones.</span><span><b>Acuerdo entre modelos</b>: alto si los modelos dan alturas parecidas, bajo si discrepan mucho.</span></div>
+      <div class="src"><span><b>Energía (kJ)</b> = energía de una ola por metro de frente ≈ 0,98 × altura² × periodo². Sube mucho con el periodo: misma altura con más periodo empuja bastante más. No es idéntica a la de Surf-Forecast, que no publica su fórmula.</span><span><b>Térmica</b> = 75 % la temperatura del agua + 25 % la temperatura del aire: manda el agua y el aire la corrige. <b>Traje</b>, según esa térmica: más de 24° bañador · 21–24° shorty (sin mangas, hasta la rodilla) · 17–20° neopreno 3/2 · 12–16° neopreno 4/3 · menos de 12° neopreno 5/4.</span><span><b>Viento offshore/onshore</b>: dirección del viento comparada con la orientación offshore de cada spot.</span><span><b>Nivel</b>: plato (menos de 0,3 m) · pequeño (no llega al mínimo) · <b>surfeable desde 0,5 m y 6 s</b> (periodo de pico) (🔥 desde 0,6 m y 6 s) · bueno desde 1 m y 6 s (🔥🔥) · grande desde 1,5 m y 6 s (🔥🔥🔥).</span><span><b>Mejor spot</b>: potencia de la ola ajustada por el viento (glassy y offshore suman, onshore resta).</span><span><b>Glassy</b>: viento medio por debajo de 6 km/h y rachas por debajo de 12 km/h; mar liso, las mejores condiciones.</span><span><b>Acuerdo entre modelos</b>: alto si los modelos dan alturas parecidas, bajo si discrepan mucho.</span></div>
     </div>
     <div class="src-note">Surf-Forecast, Windguru, Windy y Wisuki no se consultan en vivo: no permiten leer sus previsiones desde la app. Surf-Forecast se usa solo para la orientación de los spots.</div>
   </div>
@@ -690,7 +697,7 @@ main section,#alertTop{scroll-margin-top:calc(var(--tbh,0px) + 60px)}
 
   <section class="verdict" id="verdict" aria-live="polite"></section>
 
-  <section>
+  <section id="cmpSec">
     <div class="sec-h"><h2 id="cmpTitle">Comparativa ahora mismo</h2><p id="nowNote">Del mejor al peor spot · la barra es la altura de la ola</p></div>
     <div class="bars" id="bars"></div>
     <div class="now" id="now" hidden></div>
@@ -948,11 +955,13 @@ function swell(from, spot, s=14, withName=true){ if(from==null) return "";
   return `<span class="swd ${f}" title="${t}" aria-label="${t}"><svg width="${s}" height="${s}" viewBox="0 0 24 24" style="transform:rotate(${(from+180)%360}deg)" aria-hidden="true"><path d="M12 2l7 11h-4.5v9h-5v-9H5z" fill="currentColor"/></svg>${withName?`<b>${dirName(from)}</b>`:""}</span>`; }
 
 /* ---- sensación térmica del surfista: media entre el agua y la sensación fuera del agua (temperatura con viento) ---- */
-function thermo(id,x,ts,i){ if(!x) return null; const wt=waterAt(id,ts,i), at=x.w.at&&x.w.at[i]!=null?x.w.at[i]:x.w.t[i];
-  if(wt==null) return null; const th=at==null?wt:(wt+at)/2;
+const W_WATER=0.75, W_AIR=0.25; // peso del agua y del aire en la térmica que decide el traje
+const mixT = (wt, air) => air==null ? wt : wt*W_WATER + air*W_AIR;
+function thermo(id,x,ts,i){ if(!x) return null; const wt=waterAt(id,ts,i), at=x.w.t&&x.w.t[i]!=null?x.w.t[i]:(x.w.at?x.w.at[i]:null);
+  if(wt==null) return null; const th=mixT(wt,at);
   const S=suitFor(th), suit=S.t;
   return {wt,at,th,suit,S}; }
-const thermoChip = o => !o ? "" : `<span class="thc" title="Agua ${fmt(o.wt,1)}° · sensación fuera ${fmt(o.at,0)}° · térmica = media de las dos · ${o.suit}"><span class="nw">🌡️ térmica ${fmt(o.th,0)}°</span><span class="nw">${suitIco(o.S,18)} ${o.suit}</span></span>`;
+const thermoChip = o => !o ? "" : `<span class="thc" title="Agua ${fmt(o.wt,1)}° · aire ${fmt(o.at,0)}° · térmica = 75 % agua + 25 % aire · ${o.suit}"><span class="nw">🌡️ térmica ${fmt(o.th,0)}°</span><span class="nw">${suitIco(o.S,18)} ${o.suit}</span></span>`;
 
 /* ---- time helpers (data is in Europe/Madrid local time) ---- */
 function madridNow(){
@@ -1076,9 +1085,9 @@ function suitIco(S, z){ z=z||20; const st=`class="suit-ic" width="${z}" height="
   if(S.k==="b") return `<svg ${st}><path d="M4 6h16l-1.2 11h-5.3L12 11.5 10.5 17H5.2z" fill="currentColor"/><path d="M4 8.2h16" stroke="var(--card)" stroke-width="1.2"/></svg>`;
   if(S.k==="s") return `<svg ${st}><path d="M8.6 2.5h2.3c.3 1.1 1.1 1.7 1.1 1.7s.8-.6 1.1-1.7h2.3l.9 4.2-.7 4.3 1.2 6.5h-4L12 13.6l-.8 3.7h-4l1.2-6.5-.7-4.3z" fill="currentColor"/></svg>`;
   return `<svg ${st}><path d="M9 2.5h6l3.6 3 1.2 8.5h-2l-1.3-6-.4 6 .7 8.5h-3l-.8-8-.8 8h-3l.7-8.5-.4-6-1.3 6h-2l1.2-8.5z" fill="currentColor"/></svg>`; }
-function airAt(id,i){ const x=state.data&&state.data.spots[id]; if(!x) return null; return x.w.at&&x.w.at[i]!=null?x.w.at[i]:(x.w.t?x.w.t[i]:null); }
-function thermAt(id,ts,i){ const wt=waterAt(id,ts,i); if(wt==null) return null; const at=airAt(id,i); return at==null?wt:(wt+at)/2; }
-const suitTag = (w, at) => { if(w==null) return ""; const th=at==null?w:(w+at)/2, S=suitFor(th); return `<span class="suit" title="Traje según la térmica ${fmt(th,0)}° (agua ${fmt(w,0)}° y sensación fuera ${at==null?"—":fmt(at,0)+"°"})">${suitIco(S,18)}${S.m||S.t}</span>`; };
+function airAt(id,i){ const x=state.data&&state.data.spots[id]; if(!x) return null; return x.w.t&&x.w.t[i]!=null?x.w.t[i]:(x.w.at?x.w.at[i]:null); }
+function thermAt(id,ts,i){ const wt=waterAt(id,ts,i); if(wt==null) return null; const at=airAt(id,i); return mixT(wt,at); }
+const suitTag = (w, at) => { if(w==null) return ""; const th=mixT(w,at), S=suitFor(th); return `<span class="suit" title="Traje según la térmica ${fmt(th,0)}° (75 % agua ${fmt(w,0)}° + 25 % aire ${at==null?"—":fmt(at,0)+"°"})">${suitIco(S,18)}${S.m||S.t}</span>`; };
 function waterAt(id, ts, i){ const d=state.data, S=d&&d.sst; if(!S||!S.v[id]) return null; const k=Math.round((Date.parse(ts[i]+"Z")-Date.parse(S.t0+"Z"))/3600e3); const a=S.v[id]; return k>=0&&k<a.length?a[k]:null; }
 const waterTag = (id, ts, i) => { const w=waterAt(id,ts,i); return w==null?"":`<span class="water" title="Temperatura del agua">💧 agua ${fmt(w,0)}°</span>${suitTag(w, airAt(id,i))}`; };
 const fireTag = (h,p) => { const t=fireTier(h,p); return t===3?`<span class="fire max" title="Fuego máximo: 1,5 m y 6 s o más">🔥🔥🔥</span>`:t===2?`<span class="fire max" title="Doble fuego: 1 m y 6 s o más">🔥🔥</span>`:t===1?`<span class="fire" title="Fuego: 0,6 m y 6 s o más">🔥</span>`:""; };
@@ -1451,7 +1460,22 @@ const renderIso = renderMaps;
 function updateJump(){ const j=$("jump"); if(!j) return; const m=j.querySelector('[data-j="map"]'), b=j.querySelector('[data-j="buoy"]'); if(m) m.hidden=$("mapSec").hidden; }
 function setJumpOffset(){ const tb=document.querySelector(".topbar"); const sticky=tb && getComputedStyle(tb).position==="sticky"; document.documentElement.style.setProperty("--tbh", (sticky?tb.offsetHeight:0)+"px"); }
 setJumpOffset(); window.addEventListener("resize", setJumpOffset);
-$("jump").addEventListener("click",e=>{ const a=e.target.closest("a"); if(!a) return; e.preventDefault(); if(a.dataset.j==="tom" && state.data){ state.hhDay=1; state.hhPicked=true; renderHH(); } const t=document.querySelector(a.getAttribute("href")); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); });
+// Secciones plegables (Comparativa, Hora a hora, 7 días, Mapas y boyas): cada persona decide y el móvil lo recuerda
+const COLL_DEF = {cmpSec:false, hhSec:true, weekSec:true, mapSec:true}; // true = desplegada la primera vez
+function collSet(sec, open, save){ sec.classList.toggle("coll", !open); const b=sec.querySelector(":scope > .sec-h .ctog");
+  if(b){ b.setAttribute("aria-expanded", open); b.querySelector("span").textContent = open ? "Plegar" : "Desplegar"; }
+  if(save){ try{ localStorage.setItem("swr-open-"+sec.id, open?"1":"0"); }catch(e){} } }
+function setupCollapse(){ for(const id in COLL_DEF){ const sec=$(id); if(!sec||sec.dataset.coll) continue; const h=sec.querySelector(":scope > .sec-h"); if(!h) continue;
+  sec.dataset.coll="1"; const body=document.createElement("div"); body.className="cbody"; body.id=id+"Body"; while(h.nextSibling) body.appendChild(h.nextSibling); sec.appendChild(body);
+  const b=document.createElement("button"); b.type="button"; b.className="ctog"; b.setAttribute("aria-controls", body.id);
+  b.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg><span></span>';
+  h.appendChild(b); const h2=h.querySelector("h2"); if(h2) h2.classList.add("ch");
+  const toggle=()=>collSet(sec, sec.classList.contains("coll"), true); b.addEventListener("click", toggle); if(h2) h2.addEventListener("click", toggle);
+  let open=COLL_DEF[id]; try{ const v=localStorage.getItem("swr-open-"+id); if(v!=null) open=v==="1"; }catch(e){}
+  collSet(sec, open, false); } }
+function collOpenFor(el){ const sec=el&&el.closest&&el.closest("section.coll"); if(sec) collSet(sec, true, true); }
+setupCollapse();
+$("jump").addEventListener("click",e=>{ const a=e.target.closest("a"); if(!a) return; e.preventDefault(); if(a.dataset.j==="tom" && state.data){ state.hhDay=1; state.hhPicked=true; renderHH(); } const t=document.querySelector(a.getAttribute("href")); collOpenFor(t); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); });
 function openDetail(){ const o=$("detailOv"); o.hidden=false; o.scrollTop=0; document.body.style.overflow="hidden"; }
 function closeDetail(){ $("detailOv").hidden=true; document.body.style.overflow=""; }
 $("detailClose").addEventListener("click", closeDetail);
