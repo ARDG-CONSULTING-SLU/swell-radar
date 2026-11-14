@@ -1713,12 +1713,14 @@ async function loadStatic(force){
     const r = await fetch("data.json", {cache: force ? "no-store" : "no-cache"});
     if(!r.ok) return;
     const v = await r.json();
-    if(v && v.spots && (!state.data || Date.parse(v.fetchedAt) > Date.parse(state.data.fetchedAt))){ state.data = v; render(); }
+    if(v && v.spots && (!state.data || Date.parse(v.fetchedAt) > Date.parse(state.data.fetchedAt))){ state.data = v; state.rk=madridNow().slice(0,13); render(); }
     else if(v && state.data){ let ch=false; if(!state.data.iso&&v.iso){ state.data.iso=v.iso; ch=true; } if(!state.data.sst&&v.sst){ state.data.sst=v.sst; ch=true; } if(!state.data.buoys&&v.buoys){ state.data.buoys=v.buoys; ch=true; } if(ch) render(); }
   }catch(e){}
+  // Si la app se queda abierta y cambia la hora o el día, volver a pintar aunque los datos no sean nuevos
+  if(state.data){ const k=madridNow().slice(0,13); if(k!==state.rk){ state.rk=k; render(); } }
 }
 loadStatic(false);
-setInterval(()=>loadStatic(true), 15*60000);
+setInterval(()=>loadStatic(true), 5*60000);
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) loadStatic(true); });
 let srcLastFocus=null;
 function openSources(){
